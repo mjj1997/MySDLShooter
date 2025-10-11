@@ -7,7 +7,11 @@
 class Game
 {
 public:
-    Game() = default;
+    static Game& instance()
+    {
+        static Game s_instance;
+        return s_instance;
+    }
     ~Game() = default;
 
     void init();
@@ -20,6 +24,10 @@ public:
     void render();
 
 private:
+    Game() = default;
+    Game(const Game&) = delete;
+    Game& operator=(const Game&) = delete;
+
     bool m_isRunning{ true };
     Scene* m_currentScene{ nullptr };
     SDL_Window* m_window{ nullptr };
