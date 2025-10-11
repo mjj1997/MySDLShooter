@@ -17,6 +17,8 @@ public:
     void render() override;
     void clean() override;
 
+    void keyboardControl();
+
 private:
     Game& m_game;
     Player m_player;

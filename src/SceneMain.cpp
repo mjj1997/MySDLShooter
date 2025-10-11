@@ -24,7 +24,10 @@ void SceneMain::init()
 
 void SceneMain::handleEvent(SDL_Event* event) {}
 
-void SceneMain::update() {}
+void SceneMain::update()
+{
+    keyboardControl();
+}
 
 void SceneMain::render()
 {
@@ -38,3 +41,34 @@ void SceneMain::render()
 }
 
 void SceneMain::clean() {}
+
+void SceneMain::keyboardControl()
+{
+    auto keyboardState{ SDL_GetKeyboardState(nullptr) };
+    if (keyboardState[SDL_SCANCODE_W]) {
+        m_player.position.y -= 1.0f;
+    }
+    if (keyboardState[SDL_SCANCODE_S]) {
+        m_player.position.y += 1.0f;
+    }
+    if (keyboardState[SDL_SCANCODE_A]) {
+        m_player.position.x -= 1.0f;
+    }
+    if (keyboardState[SDL_SCANCODE_D]) {
+        m_player.position.x += 1.0f;
+    }
+
+    // 限制玩家位置在窗口内
+    if (m_player.position.x < 0) {
+        m_player.position.x = 0;
+    }
+    if (m_player.position.x > m_game.windowWidth() - m_player.width) {
+        m_player.position.x = m_game.windowWidth() - m_player.width;
+    }
+    if (m_player.position.y < 0) {
+        m_player.position.y = 0;
+    }
+    if (m_player.position.y > m_game.windowHeight() - m_player.height) {
+        m_player.position.y = m_game.windowHeight() - m_player.height;
+    }
+}
