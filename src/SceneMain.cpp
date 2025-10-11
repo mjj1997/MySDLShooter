@@ -24,9 +24,9 @@ void SceneMain::init()
 
 void SceneMain::handleEvent(SDL_Event* event) {}
 
-void SceneMain::update()
+void SceneMain::update(float deltaTime)
 {
-    keyboardControl();
+    keyboardControl(deltaTime);
 }
 
 void SceneMain::render()
@@ -42,20 +42,20 @@ void SceneMain::render()
 
 void SceneMain::clean() {}
 
-void SceneMain::keyboardControl()
+void SceneMain::keyboardControl(float deltaTime)
 {
     auto keyboardState{ SDL_GetKeyboardState(nullptr) };
     if (keyboardState[SDL_SCANCODE_W]) {
-        m_player.position.y -= 1.0f;
+        m_player.position.y -= m_player.speed * deltaTime;
     }
     if (keyboardState[SDL_SCANCODE_S]) {
-        m_player.position.y += 1.0f;
+        m_player.position.y += m_player.speed * deltaTime;
     }
     if (keyboardState[SDL_SCANCODE_A]) {
-        m_player.position.x -= 1.0f;
+        m_player.position.x -= m_player.speed * deltaTime;
     }
     if (keyboardState[SDL_SCANCODE_D]) {
-        m_player.position.x += 1.0f;
+        m_player.position.x += m_player.speed * deltaTime;
     }
 
     // 限制玩家位置在窗口内

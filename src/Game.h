@@ -20,7 +20,7 @@ public:
     void clean();
 
     void handleEvent(SDL_Event* event);
-    void update();
+    void update(float deltaTime);
     void render();
 
     SDL_Window* window() { return m_window; }
@@ -39,4 +39,7 @@ private:
     SDL_Renderer* m_renderer{ nullptr };
     int m_windowWidth{ 600 };
     int m_windowHeight{ 800 };
+    int m_FPS{ 60 };
+    Uint32 m_frameTime{ static_cast<Uint32>(1000) / m_FPS };
+    float m_deltaTime{ 0.0f };
 };

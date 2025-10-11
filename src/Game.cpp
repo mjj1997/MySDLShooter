@@ -49,13 +49,20 @@ void Game::init()
 void Game::run()
 {
     while (m_isRunning) {
+        auto frameStart{ SDL_GetTicks() };
         SDL_Event event;
-
         handleEvent(&event);
-
-        update();
-
+        update(m_deltaTime);
         render();
+        auto frameEnd{ SDL_GetTicks() };
+        auto frameTime{ frameEnd - frameStart };
+
+        if (frameTime < m_frameTime) {
+            SDL_Delay(m_frameTime - frameTime);
+            m_deltaTime = m_frameTime / 1000.0f;
+        } else {
+            m_deltaTime = frameTime / 1000.0f;
+        }
     }
 }
 
@@ -93,9 +100,9 @@ void Game::handleEvent(SDL_Event* event)
     }
 }
 
-void Game::update()
+void Game::update(float deltaTime)
 {
-    m_currentScene->update();
+    m_currentScene->update(deltaTime);
 }
 
 void Game::render()
