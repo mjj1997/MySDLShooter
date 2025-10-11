@@ -2,6 +2,7 @@
 #include "SceneMain.h"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 void Game::init()
 {
@@ -33,8 +34,16 @@ void Game::init()
                      SDL_GetError());
         m_isRunning = false;
     }
+    // 初始化SDL_image
+    if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,
+                     "SDL_image could not initialize! SDL_image Error: %s\n",
+                     IMG_GetError());
+        m_isRunning = false;
+    }
 
     m_currentScene = new SceneMain;
+    m_currentScene->init();
 }
 
 void Game::run()
@@ -66,7 +75,8 @@ void Game::clean()
         m_currentScene->clean();
         delete m_currentScene;
     }
-
+    // 清理SDL_image
+    IMG_Quit();
     // 清理并退出
     SDL_DestroyRenderer(m_renderer);
     SDL_DestroyWindow(m_window);

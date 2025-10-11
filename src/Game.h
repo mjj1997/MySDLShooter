@@ -23,6 +23,11 @@ public:
     void update();
     void render();
 
+    SDL_Window* window() { return m_window; }
+    SDL_Renderer* renderer() { return m_renderer; }
+    int windowWidth() { return m_windowWidth; }
+    int windowHeight() { return m_windowHeight; }
+
 private:
     Game() = default;
     Game(const Game&) = delete;

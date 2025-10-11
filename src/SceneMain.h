@@ -1,11 +1,14 @@
 #pragma once
 
+#include "Object.h"
 #include "Scene.h"
+
+class Game;
 
 class SceneMain : public Scene
 {
 public:
-    SceneMain() = default;
+    SceneMain();
     ~SceneMain() override = default;
 
     void init() override;
@@ -13,4 +16,8 @@ public:
     void update() override;
     void render() override;
     void clean() override;
+
+private:
+    Game& m_game;
+    Player m_player;
 };
