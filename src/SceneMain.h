@@ -3,6 +3,8 @@
 #include "Object.h"
 #include "Scene.h"
 
+#include <list>
+
 class Game;
 
 class SceneMain : public Scene
@@ -18,8 +20,16 @@ public:
     void clean() override;
 
     void keyboardControl(float deltaTime);
+    void shootPlayerBullet();
+    void updatePlayerBullets(float deltaTime);
+    void renderPlayerBullets();
 
 private:
     Game& m_game;
     Player m_player;
+    // 创建子弹模板
+    PlayerBullet m_playerBulletTemplate;
+
+    // 存储活动子弹的列表
+    std::list<PlayerBullet*> m_playerBullets;
 };
