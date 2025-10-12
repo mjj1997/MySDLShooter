@@ -31,7 +31,8 @@ void SceneMain::update(float deltaTime)
 
 void SceneMain::render()
 {
-    SDL_Rect playerRect{
+    // 渲染玩家飞机
+    const SDL_Rect playerRect{
         static_cast<int>(m_player.position.x),
         static_cast<int>(m_player.position.y),
         m_player.width,
@@ -44,7 +45,7 @@ void SceneMain::clean() {}
 
 void SceneMain::keyboardControl(float deltaTime)
 {
-    auto keyboardState{ SDL_GetKeyboardState(nullptr) };
+    const auto* keyboardState{ SDL_GetKeyboardState(nullptr) };
     if (keyboardState[SDL_SCANCODE_W]) {
         m_player.position.y -= m_player.speed * deltaTime;
     }
