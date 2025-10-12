@@ -5,12 +5,17 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include <random>
+
 SceneMain::SceneMain()
     : m_game(Game::instance())
 {}
 
 void SceneMain::init()
 {
+    std::random_device randomDevice;
+    m_randomEngine = std::mt19937{ randomDevice() };
+    m_randomDistribution = std::uniform_real_distribution<float>{ 0.0f, 1.0f };
     // 初始化玩家飞机
     m_player.texture = IMG_LoadTexture(m_game.renderer(), "assets/image/SpaceShip.png");
     if (m_player.texture == nullptr) {
@@ -36,6 +41,19 @@ void SceneMain::init()
                      &m_playerBulletTemplate.height);
     m_playerBulletTemplate.width /= 4;
     m_playerBulletTemplate.height /= 4;
+
+    // 初始化敌人模板
+    m_enemyTemplate.texture = IMG_LoadTexture(m_game.renderer(), "assets/image/insect-2.png");
+    if (m_enemyTemplate.texture == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load enemy texture: %s", SDL_GetError());
+    }
+    SDL_QueryTexture(m_enemyTemplate.texture,
+                     nullptr,
+                     nullptr,
+                     &m_enemyTemplate.width,
+                     &m_enemyTemplate.height);
+    m_enemyTemplate.width /= 4;
+    m_enemyTemplate.height /= 4;
 }
 
 void SceneMain::handleEvent(SDL_Event* event) {}
@@ -44,6 +62,8 @@ void SceneMain::update(float deltaTime)
 {
     keyboardControl(deltaTime);
     updatePlayerBullets(deltaTime);
+    spawnEnemy();
+    updateEnemies(deltaTime);
 }
 
 void SceneMain::render()
@@ -59,6 +79,9 @@ void SceneMain::render()
         m_player.height,
     };
     SDL_RenderCopy(m_game.renderer(), m_player.texture, nullptr, &playerRect);
+
+    // 渲染敌人
+    renderEnemies();
 }
 
 void SceneMain::clean()
@@ -71,12 +94,23 @@ void SceneMain::clean()
     }
     m_playerBullets.clear();
 
+    // 清理敌人
+    for (auto& enemy : m_enemies) {
+        if (enemy != nullptr) {
+            delete enemy;
+        }
+    }
+    m_enemies.clear();
+
     // 清理纹理
     if (m_player.texture != nullptr) {
         SDL_DestroyTexture(m_player.texture);
     }
     if (m_playerBulletTemplate.texture != nullptr) {
         SDL_DestroyTexture(m_playerBulletTemplate.texture);
+    }
+    if (m_enemyTemplate.texture != nullptr) {
+        SDL_DestroyTexture(m_enemyTemplate.texture);
     }
 }
 
@@ -158,5 +192,50 @@ void SceneMain::renderPlayerBullets()
             playerBullet->height,
         };
         SDL_RenderCopy(m_game.renderer(), playerBullet->texture, nullptr, &playerBulletRect);
+    }
+}
+
+void SceneMain::spawnEnemy()
+{
+    // 通过随机数决定是否生成敌人 (每帧 1/60 概率生成)
+    if (m_randomDistribution(m_randomEngine) > 1 / 60.0f)
+        return;
+
+    // 创建敌人
+    auto* enemy{ new Enemy{ m_enemyTemplate } };
+    // 设置敌人位置在窗口随机位置
+    enemy->position.x = m_randomDistribution(m_randomEngine)
+                        * (m_game.windowWidth() - enemy->width);
+    enemy->position.y = -enemy->height;
+    // 添加敌人到列表
+    m_enemies.push_back(enemy);
+}
+
+void SceneMain::updateEnemies(float deltaTime)
+{
+    for (auto it{ m_enemies.begin() }; it != m_enemies.end();) {
+        auto* enemy{ *it };
+        // 更新敌人位置
+        enemy->position.y += enemy->speed * deltaTime;
+        // 如果敌人超出窗口底部，移除敌人
+        if (enemy->position.y > m_game.windowHeight()) {
+            delete enemy;
+            it = m_enemies.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void SceneMain::renderEnemies()
+{
+    for (auto* enemy : m_enemies) {
+        const SDL_Rect enemyRect{
+            static_cast<int>(enemy->position.x),
+            static_cast<int>(enemy->position.y),
+            enemy->width,
+            enemy->height,
+        };
+        SDL_RenderCopy(m_game.renderer(), enemy->texture, nullptr, &enemyRect);
     }
 }
