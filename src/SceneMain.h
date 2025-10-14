@@ -40,16 +40,13 @@ private:
     bool m_isPlayerAlive{ true };
     std::mt19937 m_randomEngine;
     std::uniform_real_distribution<float> m_randomDistribution;
-    // 创建子弹模板
+    // 创建所有 Object 的模板
     PlayerBullet m_playerBulletTemplate;
-    // 创建敌人模板
     Enemy m_enemyTemplate;
-    // 创建敌人子弹模板
     EnemyBullet m_enemyBulletTemplate;
-    // 存储活动子弹的列表
+
+    // 存储所有活动 Object 的列表
     std::list<PlayerBullet*> m_playerBullets;
-    // 存储活动敌人的列表
     std::list<Enemy*> m_enemies;
-    // 存储活动敌人子弹的列表
     std::list<EnemyBullet*> m_enemyBullets;
 };
