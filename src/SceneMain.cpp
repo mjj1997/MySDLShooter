@@ -198,6 +198,24 @@ void SceneMain::updatePlayer(float deltaTime)
     if (m_player.currentHealth <= 0) {
         m_isPlayerAlive = false;
     }
+    for (auto* enemy : m_enemies) {
+        const SDL_Rect enemyRect{
+            static_cast<int>(enemy->position.x),
+            static_cast<int>(enemy->position.y),
+            enemy->width,
+            enemy->height,
+        };
+        const SDL_Rect playerRect{
+            static_cast<int>(m_player.position.x),
+            static_cast<int>(m_player.position.y),
+            m_player.width,
+            m_player.height,
+        };
+        if (SDL_HasIntersection(&enemyRect, &playerRect)) {
+            m_player.currentHealth -= 1;
+            enemy->currentHealth = 0;
+        }
+    }
 }
 
 void SceneMain::shootPlayerBullet()
