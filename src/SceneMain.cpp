@@ -202,7 +202,7 @@ void SceneMain::updatePlayerBullets(float deltaTime)
         // 更新玩家子弹位置
         playerBullet->position.y -= playerBullet->speed * deltaTime;
         // 如果玩家子弹超出窗口顶部，移除玩家子弹
-        if (playerBullet->position.y + margin < 0) {
+        if (playerBullet->position.y < -margin) {
             delete playerBullet;
             it = m_playerBullets.erase(it);
         } else {
