@@ -81,6 +81,7 @@ void SceneMain::update(float deltaTime)
     updateEnemyBullets(deltaTime);
     spawnEnemy();
     updateEnemies(deltaTime);
+    updatePlayer(deltaTime);
 }
 
 void SceneMain::render()
@@ -91,13 +92,15 @@ void SceneMain::render()
     renderEnemyBullets();
 
     // 渲染玩家飞机
-    const SDL_Rect playerRect{
-        static_cast<int>(m_player.position.x),
-        static_cast<int>(m_player.position.y),
-        m_player.width,
-        m_player.height,
-    };
-    SDL_RenderCopy(m_game.renderer(), m_player.texture, nullptr, &playerRect);
+    if (m_isPlayerAlive) {
+        const SDL_Rect playerRect{
+            static_cast<int>(m_player.position.x),
+            static_cast<int>(m_player.position.y),
+            m_player.width,
+            m_player.height,
+        };
+        SDL_RenderCopy(m_game.renderer(), m_player.texture, nullptr, &playerRect);
+    }
 
     // 渲染敌人
     renderEnemies();
@@ -146,6 +149,9 @@ void SceneMain::clean()
 
 void SceneMain::keyboardControl(float deltaTime)
 {
+    if (!m_isPlayerAlive)
+        return;
+
     const auto* keyboardState{ SDL_GetKeyboardState(nullptr) };
     if (keyboardState[SDL_SCANCODE_W]) {
         m_player.position.y -= m_player.speed * deltaTime;
@@ -181,6 +187,16 @@ void SceneMain::keyboardControl(float deltaTime)
             shootPlayerBullet();
             m_player.lastFireTime = currentTime;
         }
+    }
+}
+
+void SceneMain::updatePlayer(float deltaTime)
+{
+    if (!m_isPlayerAlive) {
+        return;
+    }
+    if (m_player.currentHealth <= 0) {
+        m_isPlayerAlive = false;
     }
 }
 
@@ -279,7 +295,7 @@ void SceneMain::updateEnemies(float deltaTime)
             it = m_enemies.erase(it);
         } else {
             // 控制敌人子弹发射
-            if (currentTime - enemy->lastFireTime > enemy->coolDown) {
+            if (currentTime - enemy->lastFireTime > enemy->coolDown && m_isPlayerAlive != false) {
                 shootEnemyBullet(enemy);
                 enemy->lastFireTime = currentTime;
             }
@@ -349,7 +365,7 @@ void SceneMain::updateEnemyBullets(float deltaTime)
                 enemyBullet->width,
                 enemyBullet->height,
             };
-            if (SDL_HasIntersection(&playerRect, &enemyBulletRect)) {
+            if (SDL_HasIntersection(&playerRect, &enemyBulletRect) && m_isPlayerAlive != false) {
                 m_player.currentHealth -= enemyBullet->damage;
                 delete enemyBullet;
                 it = m_enemyBullets.erase(it);

@@ -21,6 +21,7 @@ public:
     void clean() override;
 
     void keyboardControl(float deltaTime);
+    void updatePlayer(float deltaTime);
     void shootPlayerBullet();
     void updatePlayerBullets(float deltaTime);
     void renderPlayerBullets();
@@ -36,6 +37,7 @@ public:
 private:
     Game& m_game;
     Player m_player;
+    bool m_isPlayerAlive{ true };
     std::mt19937 m_randomEngine;
     std::uniform_real_distribution<float> m_randomDistribution;
     // 创建子弹模板
