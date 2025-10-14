@@ -336,7 +336,26 @@ void SceneMain::updateEnemyBullets(float deltaTime)
             delete enemyBullet;
             it = m_enemyBullets.erase(it);
         } else {
-            ++it;
+            // 检查敌人子弹是否击中玩家
+            const SDL_Rect playerRect{
+                static_cast<int>(m_player.position.x),
+                static_cast<int>(m_player.position.y),
+                m_player.width,
+                m_player.height,
+            };
+            const SDL_Rect enemyBulletRect{
+                static_cast<int>(enemyBullet->position.x),
+                static_cast<int>(enemyBullet->position.y),
+                enemyBullet->width,
+                enemyBullet->height,
+            };
+            if (SDL_HasIntersection(&playerRect, &enemyBulletRect)) {
+                m_player.currentHealth -= enemyBullet->damage;
+                delete enemyBullet;
+                it = m_enemyBullets.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ struct Player
     int width{ 0 };
     int height{ 0 };
     int speed{ 200 };
+    int currentHealth{ 3 };
     Uint32 coolDown{ 500 };
     Uint32 lastFireTime{ 0 };
 };
@@ -43,4 +44,5 @@ struct EnemyBullet
     int width{ 0 };
     int height{ 0 };
     int speed{ 400 };
+    int damage{ 1 };
 };
