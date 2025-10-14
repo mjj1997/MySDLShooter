@@ -207,7 +207,32 @@ void SceneMain::updatePlayerBullets(float deltaTime)
             delete playerBullet;
             it = m_playerBullets.erase(it);
         } else {
-            ++it;
+            // 检查玩家子弹是否击中敌人
+            bool hit{ false };
+            for (auto* enemy : m_enemies) {
+                const SDL_Rect enemyRect{
+                    static_cast<int>(enemy->position.x),
+                    static_cast<int>(enemy->position.y),
+                    enemy->width,
+                    enemy->height,
+                };
+                const SDL_Rect playerBulletRect{
+                    static_cast<int>(playerBullet->position.x),
+                    static_cast<int>(playerBullet->position.y),
+                    playerBullet->width,
+                    playerBullet->height,
+                };
+                if (SDL_HasIntersection(&enemyRect, &playerBulletRect)) {
+                    enemy->currentHealth -= playerBullet->damage;
+                    delete playerBullet;
+                    it = m_playerBullets.erase(it);
+                    hit = true;
+                    break;
+                }
+            }
+            if (!hit) {
+                ++it;
+            }
         }
     }
 }
@@ -258,7 +283,13 @@ void SceneMain::updateEnemies(float deltaTime)
                 shootEnemyBullet(enemy);
                 enemy->lastFireTime = currentTime;
             }
-            ++it;
+            // 如果敌人生命值小于等于0，爆炸敌人并移除敌人
+            if (enemy->currentHealth <= 0) {
+                explodeEnemy(enemy);
+                it = m_enemies.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
 }
@@ -345,4 +376,9 @@ SDL_FPoint SceneMain::getEnemyBulletDirection(Enemy* enemy) const
     direction.y /= length;
 
     return direction;
+}
+
+void SceneMain::explodeEnemy(Enemy* enemy)
+{
+    delete enemy;
 }

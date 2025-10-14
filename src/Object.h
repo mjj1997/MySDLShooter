@@ -20,6 +20,7 @@ struct Enemy
     int width{ 0 };
     int height{ 0 };
     int speed{ 200 };
+    int currentHealth{ 1 };
     Uint32 coolDown{ 1000 };
     Uint32 lastFireTime{ 0 };
 };
@@ -31,6 +32,7 @@ struct PlayerBullet
     int width{ 0 };
     int height{ 0 };
     int speed{ 400 };
+    int damage{ 1 };
 };
 
 struct EnemyBullet

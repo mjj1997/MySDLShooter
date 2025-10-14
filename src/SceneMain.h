@@ -31,6 +31,7 @@ public:
     void updateEnemyBullets(float deltaTime);
     void renderEnemyBullets();
     SDL_FPoint getEnemyBulletDirection(Enemy* enemy) const;
+    void explodeEnemy(Enemy* enemy);
 
 private:
     Game& m_game;
