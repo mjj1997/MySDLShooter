@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include <numbers>
 #include <random>
 
 SceneMain::SceneMain()
@@ -318,7 +319,16 @@ void SceneMain::renderEnemyBullets()
             enemyBullet->width,
             enemyBullet->height,
         };
-        SDL_RenderCopy(m_game.renderer(), enemyBullet->texture, nullptr, &enemyBulletRect);
+        auto angle{ SDL_atan2(enemyBullet->direction.y, enemyBullet->direction.x)
+                        * (180 / std::numbers::pi)
+                    - 90 };
+        SDL_RenderCopyEx(m_game.renderer(),
+                         enemyBullet->texture,
+                         nullptr,
+                         &enemyBulletRect,
+                         angle,
+                         nullptr,
+                         SDL_FLIP_NONE);
     }
 }
 
