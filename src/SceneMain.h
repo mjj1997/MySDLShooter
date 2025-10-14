@@ -27,6 +27,10 @@ public:
     void spawnEnemy();
     void updateEnemies(float deltaTime);
     void renderEnemies();
+    void shootEnemyBullet(Enemy* enemy);
+    void updateEnemyBullets(float deltaTime);
+    void renderEnemyBullets();
+    SDL_FPoint getEnemyBulletDirection(Enemy* enemy) const;
 
 private:
     Game& m_game;
@@ -37,8 +41,12 @@ private:
     PlayerBullet m_playerBulletTemplate;
     // 创建敌人模板
     Enemy m_enemyTemplate;
+    // 创建敌人子弹模板
+    EnemyBullet m_enemyBulletTemplate;
     // 存储活动子弹的列表
     std::list<PlayerBullet*> m_playerBullets;
     // 存储活动敌人的列表
     std::list<Enemy*> m_enemies;
+    // 存储活动敌人子弹的列表
+    std::list<EnemyBullet*> m_enemyBullets;
 };

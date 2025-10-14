@@ -54,6 +54,21 @@ void SceneMain::init()
                      &m_enemyTemplate.height);
     m_enemyTemplate.width /= 4;
     m_enemyTemplate.height /= 4;
+
+    // 初始化敌人子弹模板
+    m_enemyBulletTemplate.texture = IMG_LoadTexture(m_game.renderer(), "assets/image/bullet-1.png");
+    if (m_enemyBulletTemplate.texture == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,
+                     "Failed to load enemy bullet texture: %s",
+                     SDL_GetError());
+    }
+    SDL_QueryTexture(m_enemyBulletTemplate.texture,
+                     nullptr,
+                     nullptr,
+                     &m_enemyBulletTemplate.width,
+                     &m_enemyBulletTemplate.height);
+    m_enemyBulletTemplate.width /= 4;
+    m_enemyBulletTemplate.height /= 4;
 }
 
 void SceneMain::handleEvent(SDL_Event* event) {}
@@ -62,6 +77,7 @@ void SceneMain::update(float deltaTime)
 {
     keyboardControl(deltaTime);
     updatePlayerBullets(deltaTime);
+    updateEnemyBullets(deltaTime);
     spawnEnemy();
     updateEnemies(deltaTime);
 }
@@ -70,6 +86,8 @@ void SceneMain::render()
 {
     // 渲染玩家子弹
     renderPlayerBullets();
+    // 渲染敌人子弹
+    renderEnemyBullets();
 
     // 渲染玩家飞机
     const SDL_Rect playerRect{
@@ -102,6 +120,14 @@ void SceneMain::clean()
     }
     m_enemies.clear();
 
+    // 清理敌人子弹
+    for (auto& enemyBullet : m_enemyBullets) {
+        if (enemyBullet != nullptr) {
+            delete enemyBullet;
+        }
+    }
+    m_enemyBullets.clear();
+
     // 清理纹理
     if (m_player.texture != nullptr) {
         SDL_DestroyTexture(m_player.texture);
@@ -111,6 +137,9 @@ void SceneMain::clean()
     }
     if (m_enemyTemplate.texture != nullptr) {
         SDL_DestroyTexture(m_enemyTemplate.texture);
+    }
+    if (m_enemyBulletTemplate.texture != nullptr) {
+        SDL_DestroyTexture(m_enemyBulletTemplate.texture);
     }
 }
 
@@ -213,6 +242,7 @@ void SceneMain::spawnEnemy()
 
 void SceneMain::updateEnemies(float deltaTime)
 {
+    auto currentTime{ SDL_GetTicks() };
     for (auto it{ m_enemies.begin() }; it != m_enemies.end();) {
         auto* enemy{ *it };
         // 更新敌人位置
@@ -222,6 +252,11 @@ void SceneMain::updateEnemies(float deltaTime)
             delete enemy;
             it = m_enemies.erase(it);
         } else {
+            // 控制敌人子弹发射
+            if (currentTime - enemy->lastFireTime > enemy->coolDown) {
+                shootEnemyBullet(enemy);
+                enemy->lastFireTime = currentTime;
+            }
             ++it;
         }
     }
@@ -238,4 +273,66 @@ void SceneMain::renderEnemies()
         };
         SDL_RenderCopy(m_game.renderer(), enemy->texture, nullptr, &enemyRect);
     }
+}
+
+void SceneMain::shootEnemyBullet(Enemy* enemy)
+{
+    // 创建敌人子弹
+    auto* enemyBullet{ new EnemyBullet{ m_enemyBulletTemplate } };
+    // 设置敌人子弹位置在敌人飞机中心
+    enemyBullet->position.x = enemy->position.x + enemy->width / 2 - enemyBullet->width / 2;
+    enemyBullet->position.y = enemy->position.y + enemy->height / 2 - enemyBullet->height / 2;
+    // 设置敌人子弹方向
+    enemyBullet->direction = getEnemyBulletDirection(enemy);
+    // 添加敌人子弹到列表
+    m_enemyBullets.push_back(enemyBullet);
+}
+
+void SceneMain::updateEnemyBullets(float deltaTime)
+{
+    const int margin{ 32 }; // 子弹超出窗口边界的距离
+    for (auto it{ m_enemyBullets.begin() }; it != m_enemyBullets.end();) {
+        auto* enemyBullet{ *it };
+        // 更新敌人子弹位置
+        enemyBullet->position.x += enemyBullet->direction.x * enemyBullet->speed * deltaTime;
+        enemyBullet->position.y += enemyBullet->direction.y * enemyBullet->speed * deltaTime;
+        // 如果敌人子弹超出窗口边界，移除敌人子弹
+        if (enemyBullet->position.x < -margin
+            || enemyBullet->position.x > m_game.windowWidth() + margin
+            || enemyBullet->position.y < -margin
+            || enemyBullet->position.y > m_game.windowHeight() + margin) {
+            delete enemyBullet;
+            it = m_enemyBullets.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void SceneMain::renderEnemyBullets()
+{
+    for (auto* enemyBullet : m_enemyBullets) {
+        const SDL_Rect enemyBulletRect{
+            static_cast<int>(enemyBullet->position.x),
+            static_cast<int>(enemyBullet->position.y),
+            enemyBullet->width,
+            enemyBullet->height,
+        };
+        SDL_RenderCopy(m_game.renderer(), enemyBullet->texture, nullptr, &enemyBulletRect);
+    }
+}
+
+SDL_FPoint SceneMain::getEnemyBulletDirection(Enemy* enemy) const
+{
+    // 计算敌人子弹方向向量
+    SDL_FPoint direction{
+        (m_player.position.x + m_player.width / 2) - (enemy->position.x + enemy->width / 2),
+        (m_player.position.y + m_player.height / 2) - (enemy->position.y + enemy->height / 2),
+    };
+    // 归一化方向向量
+    float length{ SDL_sqrtf(direction.x * direction.x + direction.y * direction.y) };
+    direction.x /= length;
+    direction.y /= length;
+
+    return direction;
 }
