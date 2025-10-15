@@ -70,6 +70,19 @@ void SceneMain::init()
                      &m_enemyBulletTemplate.height);
     m_enemyBulletTemplate.width /= 4;
     m_enemyBulletTemplate.height /= 4;
+
+    // 初始化爆炸模板
+    m_explosionTemplate.texture = IMG_LoadTexture(m_game.renderer(), "assets/effect/explosion.png");
+    if (m_explosionTemplate.texture == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load explosion texture: %s", SDL_GetError());
+    }
+    SDL_QueryTexture(m_explosionTemplate.texture,
+                     nullptr,
+                     nullptr,
+                     &m_explosionTemplate.width,
+                     &m_explosionTemplate.height);
+    m_explosionTemplate.totalFrames = m_explosionTemplate.width / m_explosionTemplate.height;
+    m_explosionTemplate.width = m_explosionTemplate.height;
 }
 
 void SceneMain::handleEvent(SDL_Event* event) {}
@@ -82,6 +95,7 @@ void SceneMain::update(float deltaTime)
     spawnEnemy();
     updateEnemies(deltaTime);
     updatePlayer(deltaTime);
+    updateExplosions(deltaTime);
 }
 
 void SceneMain::render()
@@ -104,6 +118,8 @@ void SceneMain::render()
 
     // 渲染敌人
     renderEnemies();
+    // 渲染爆炸
+    renderExplosions();
 }
 
 void SceneMain::clean()
@@ -132,6 +148,14 @@ void SceneMain::clean()
     }
     m_enemyBullets.clear();
 
+    // 清理爆炸
+    for (auto& explosion : m_explosions) {
+        if (explosion != nullptr) {
+            delete explosion;
+        }
+    }
+    m_explosions.clear();
+
     // 清理纹理
     if (m_player.texture != nullptr) {
         SDL_DestroyTexture(m_player.texture);
@@ -144,6 +168,9 @@ void SceneMain::clean()
     }
     if (m_enemyBulletTemplate.texture != nullptr) {
         SDL_DestroyTexture(m_enemyBulletTemplate.texture);
+    }
+    if (m_explosionTemplate.texture != nullptr) {
+        SDL_DestroyTexture(m_explosionTemplate.texture);
     }
 }
 
@@ -196,7 +223,14 @@ void SceneMain::updatePlayer(float deltaTime)
         return;
     }
     if (m_player.currentHealth <= 0) {
+        const auto currentTime{ SDL_GetTicks() };
         m_isPlayerAlive = false;
+        auto* explosion{ new Explosion{ m_explosionTemplate } };
+        explosion->position.x = m_player.position.x + m_player.width / 2 - explosion->width / 2;
+        explosion->position.y = m_player.position.y + m_player.height / 2 - explosion->height / 2;
+        explosion->startTime = currentTime;
+        m_explosions.push_back(explosion);
+        return;
     }
     for (auto* enemy : m_enemies) {
         const SDL_Rect enemyRect{
@@ -433,5 +467,47 @@ SDL_FPoint SceneMain::getEnemyBulletDirection(Enemy* enemy) const
 
 void SceneMain::explodeEnemy(Enemy* enemy)
 {
+    const auto currentTime{ SDL_GetTicks() };
+    auto* explosion{ new Explosion{ m_explosionTemplate } };
+    explosion->position.x = enemy->position.x + enemy->width / 2 - explosion->width / 2;
+    explosion->position.y = enemy->position.y + enemy->height / 2 - explosion->height / 2;
+    explosion->startTime = currentTime;
+    m_explosions.push_back(explosion);
     delete enemy;
+}
+
+void SceneMain::updateExplosions(float deltaTime)
+{
+    const auto currentTime{ SDL_GetTicks() };
+    for (auto it{ m_explosions.begin() }; it != m_explosions.end();) {
+        auto* explosion{ *it };
+        // 更新爆炸当前帧
+        explosion->currentFrame = explosion->FPS * (currentTime - explosion->startTime) / 1000;
+        // 如果爆炸当前帧超过总帧数，移除爆炸
+        if (explosion->currentFrame >= explosion->totalFrames) {
+            delete explosion;
+            it = m_explosions.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void SceneMain::renderExplosions()
+{
+    for (auto* explosion : m_explosions) {
+        const SDL_Rect srcRect{
+            explosion->currentFrame * explosion->width,
+            0,
+            explosion->width,
+            explosion->height,
+        };
+        const SDL_Rect dstRect{
+            static_cast<int>(explosion->position.x),
+            static_cast<int>(explosion->position.y),
+            explosion->width,
+            explosion->height,
+        };
+        SDL_RenderCopy(m_game.renderer(), explosion->texture, &srcRect, &dstRect);
+    }
 }

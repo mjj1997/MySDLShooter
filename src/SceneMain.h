@@ -33,6 +33,8 @@ public:
     void renderEnemyBullets();
     SDL_FPoint getEnemyBulletDirection(Enemy* enemy) const;
     void explodeEnemy(Enemy* enemy);
+    void updateExplosions(float deltaTime);
+    void renderExplosions();
 
 private:
     Game& m_game;
@@ -44,9 +46,11 @@ private:
     PlayerBullet m_playerBulletTemplate;
     Enemy m_enemyTemplate;
     EnemyBullet m_enemyBulletTemplate;
+    Explosion m_explosionTemplate;
 
     // 存储所有活动 Object 的列表
     std::list<PlayerBullet*> m_playerBullets;
     std::list<Enemy*> m_enemies;
     std::list<EnemyBullet*> m_enemyBullets;
+    std::list<Explosion*> m_explosions;
 };
