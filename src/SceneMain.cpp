@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 
 #include <numbers>
 #include <random>
@@ -14,6 +15,12 @@ SceneMain::SceneMain()
 
 void SceneMain::init()
 {
+    // 加载并播放背景音乐
+    m_bgm = Mix_LoadMUS("assets/music/03_Racing_Through_Asteroids_Loop.ogg");
+    if (m_bgm == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load background music: %s", Mix_GetError());
+    }
+    Mix_PlayMusic(m_bgm, -1);
     std::random_device randomDevice;
     m_randomEngine = std::mt19937{ randomDevice() };
     m_randomDistribution = std::uniform_real_distribution<float>{ 0.0f, 1.0f };
@@ -198,6 +205,12 @@ void SceneMain::clean()
     }
     if (m_itemLifeTemplate.texture != nullptr) {
         SDL_DestroyTexture(m_itemLifeTemplate.texture);
+    }
+
+    // 清理背景音乐
+    if (m_bgm != nullptr) {
+        Mix_HaltMusic();
+        Mix_FreeMusic(m_bgm);
     }
 }
 

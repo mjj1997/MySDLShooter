@@ -3,6 +3,8 @@
 #include "Object.h"
 #include "Scene.h"
 
+#include <SDL2/SDL_mixer.h>
+
 #include <list>
 #include <random>
 
@@ -43,6 +45,8 @@ public:
 private:
     Game& m_game;
     Player m_player;
+    Mix_Music* m_bgm;
+
     bool m_isPlayerAlive{ true };
     std::mt19937 m_randomEngine;
     std::uniform_real_distribution<float> m_randomDistribution;

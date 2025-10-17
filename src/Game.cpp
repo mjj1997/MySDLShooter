@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 
 void Game::init()
 {
@@ -41,6 +42,22 @@ void Game::init()
                      IMG_GetError());
         m_isRunning = false;
     }
+    // 初始化SDL_mixer
+    if (Mix_Init(MIX_INIT_OGG) != MIX_INIT_OGG) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,
+                     "SDL_mixer could not initialize! SDL_mixer Error: %s\n",
+                     Mix_GetError());
+        m_isRunning = false;
+    }
+    // 打开音频设备
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,
+                     "SDL_mixer could not initialize! SDL_mixer Error: %s\n",
+                     Mix_GetError());
+        m_isRunning = false;
+    }
+    // 设置音效channel数量
+    Mix_AllocateChannels(32);
 
     m_currentScene = new SceneMain;
     m_currentScene->init();
@@ -84,6 +101,9 @@ void Game::clean()
     }
     // 清理SDL_image
     IMG_Quit();
+    // 清理SDL_mixer
+    Mix_CloseAudio();
+    Mix_Quit();
     // 清理并退出
     SDL_DestroyRenderer(m_renderer);
     SDL_DestroyWindow(m_window);
