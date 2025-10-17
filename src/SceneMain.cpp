@@ -652,7 +652,7 @@ void SceneMain::updateItems(float deltaTime)
                 m_player.width,
                 m_player.height,
             };
-            if (SDL_HasIntersection(&itemRect, &playerRect)) {
+            if (SDL_HasIntersection(&itemRect, &playerRect) && m_isPlayerAlive == true) {
                 processItemPickup(item);
                 delete item;
                 it = m_items.erase(it);
