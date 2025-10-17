@@ -7,6 +7,7 @@
 
 #include <list>
 #include <random>
+#include <unordered_map>
 
 class Game;
 
@@ -46,6 +47,7 @@ private:
     Game& m_game;
     Player m_player;
     Mix_Music* m_bgm;
+    std::unordered_map<std::string, Mix_Chunk*> m_sounds;
 
     bool m_isPlayerAlive{ true };
     std::mt19937 m_randomEngine;
