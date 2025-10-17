@@ -29,9 +29,12 @@ void SceneMain::init()
     m_sounds["enemy_explode"] = Mix_LoadWAV("assets/sound/explosion3.wav");
     m_sounds["hit"] = Mix_LoadWAV("assets/sound/eff11.wav");
     m_sounds["get_item"] = Mix_LoadWAV("assets/sound/eff5.wav");
+
+    // 初始化随机数生成器
     std::random_device randomDevice;
     m_randomEngine = std::mt19937{ randomDevice() };
     m_randomDistribution = std::uniform_real_distribution<float>{ 0.0f, 1.0f };
+
     // 初始化玩家飞机
     m_player.texture = IMG_LoadTexture(m_game.renderer(), "assets/image/SpaceShip.png");
     if (m_player.texture == nullptr) {

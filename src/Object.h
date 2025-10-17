@@ -10,7 +10,7 @@ struct Player
     int height{ 0 };
     int speed{ 300 };
     int currentHealth{ 3 };
-    int maxHealth{ 3 };
+    int maxHealth{ 5 };
     Uint32 coolDown{ 300 };
     Uint32 lastFireTime{ 0 };
 };
@@ -22,7 +22,7 @@ struct Enemy
     int width{ 0 };
     int height{ 0 };
     int speed{ 150 };
-    int currentHealth{ 1 };
+    int currentHealth{ 2 };
     Uint32 coolDown{ 2000 };
     Uint32 lastFireTime{ 0 };
 };
