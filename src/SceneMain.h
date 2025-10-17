@@ -35,6 +35,10 @@ public:
     void explodeEnemy(Enemy* enemy);
     void updateExplosions(float deltaTime);
     void renderExplosions();
+    void dropItem(Enemy* enemy);
+    void updateItems(float deltaTime);
+    void renderItems();
+    void processItemPickup(Item* item);
 
 private:
     Game& m_game;
@@ -47,10 +51,12 @@ private:
     Enemy m_enemyTemplate;
     EnemyBullet m_enemyBulletTemplate;
     Explosion m_explosionTemplate;
+    Item m_itemLifeTemplate;
 
     // 存储所有活动 Object 的列表
     std::list<PlayerBullet*> m_playerBullets;
     std::list<Enemy*> m_enemies;
     std::list<EnemyBullet*> m_enemyBullets;
     std::list<Explosion*> m_explosions;
+    std::list<Item*> m_items;
 };

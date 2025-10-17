@@ -83,6 +83,19 @@ void SceneMain::init()
                      &m_explosionTemplate.height);
     m_explosionTemplate.totalFrames = m_explosionTemplate.width / m_explosionTemplate.height;
     m_explosionTemplate.width = m_explosionTemplate.height;
+
+    // 初始化物品模板
+    m_itemLifeTemplate.texture = IMG_LoadTexture(m_game.renderer(), "assets/image/bonus_life.png");
+    if (m_itemLifeTemplate.texture == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load item life texture: %s", SDL_GetError());
+    }
+    SDL_QueryTexture(m_itemLifeTemplate.texture,
+                     nullptr,
+                     nullptr,
+                     &m_itemLifeTemplate.width,
+                     &m_itemLifeTemplate.height);
+    m_itemLifeTemplate.width /= 4;
+    m_itemLifeTemplate.height /= 4;
 }
 
 void SceneMain::handleEvent(SDL_Event* event) {}
@@ -96,6 +109,7 @@ void SceneMain::update(float deltaTime)
     updateEnemies(deltaTime);
     updatePlayer(deltaTime);
     updateExplosions(deltaTime);
+    updateItems(deltaTime);
 }
 
 void SceneMain::render()
@@ -118,6 +132,8 @@ void SceneMain::render()
 
     // 渲染敌人
     renderEnemies();
+    // 渲染物品
+    renderItems();
     // 渲染爆炸
     renderExplosions();
 }
@@ -156,6 +172,14 @@ void SceneMain::clean()
     }
     m_explosions.clear();
 
+    // 清理物品
+    for (auto& item : m_items) {
+        if (item != nullptr) {
+            delete item;
+        }
+    }
+    m_items.clear();
+
     // 清理纹理
     if (m_player.texture != nullptr) {
         SDL_DestroyTexture(m_player.texture);
@@ -171,6 +195,9 @@ void SceneMain::clean()
     }
     if (m_explosionTemplate.texture != nullptr) {
         SDL_DestroyTexture(m_explosionTemplate.texture);
+    }
+    if (m_itemLifeTemplate.texture != nullptr) {
+        SDL_DestroyTexture(m_itemLifeTemplate.texture);
     }
 }
 
@@ -354,6 +381,9 @@ void SceneMain::updateEnemies(float deltaTime)
             // 如果敌人生命值小于等于0，爆炸敌人并移除敌人
             if (enemy->currentHealth <= 0) {
                 explodeEnemy(enemy);
+                if (m_randomDistribution(m_randomEngine) > 0.5f) {
+                    dropItem(enemy);
+                }
                 it = m_enemies.erase(it);
             } else {
                 ++it;
@@ -509,5 +539,109 @@ void SceneMain::renderExplosions()
             explosion->height,
         };
         SDL_RenderCopy(m_game.renderer(), explosion->texture, &srcRect, &dstRect);
+    }
+}
+
+void SceneMain::dropItem(Enemy* enemy)
+{
+    auto* item{ new Item{ m_itemLifeTemplate } };
+    item->position.x = enemy->position.x + enemy->width / 2 - item->width / 2;
+    item->position.y = enemy->position.y + enemy->height / 2 - item->height / 2;
+
+    // 生成物品随机方向
+    float angle{ static_cast<float>(m_randomDistribution(m_randomEngine) * 2 * std::numbers::pi) };
+    item->direction.x = SDL_cosf(angle);
+    item->direction.y = SDL_sinf(angle);
+
+    m_items.push_back(item);
+}
+
+void SceneMain::updateItems(float deltaTime)
+{
+    for (auto it{ m_items.begin() }; it != m_items.end();) {
+        auto* item{ *it };
+        item->position.x += item->direction.x * item->speed * deltaTime;
+        item->position.y += item->direction.y * item->speed * deltaTime;
+
+        // 如果物品到达窗口边界，反弹
+        if (item->bounceCount > 0) {
+            // 标记是否已经反弹过，避免一次碰撞多次减少反弹次数
+            bool bounced{ false };
+            if (item->position.x < 0) {
+                item->direction.x *= -1;
+                bounced = true;
+            }
+            if (item->position.x + item->width > m_game.windowWidth()) {
+                item->direction.x *= -1;
+                bounced = true;
+            }
+            if (item->position.y < 0) {
+                item->direction.y *= -1;
+                bounced = true;
+            }
+            if (item->position.y + item->height > m_game.windowHeight()) {
+                item->direction.y *= -1;
+                bounced = true;
+            }
+
+            // 只在发生了反弹时减少一次反弹次数
+            if (bounced) {
+                --item->bounceCount;
+            }
+        }
+
+        if (item->position.x + item->width < 0 || item->position.y + item->height < 0
+            || item->position.x > m_game.windowWidth()
+            || item->position.y > m_game.windowHeight()) {
+            delete item;
+            it = m_items.erase(it);
+        } else {
+            const SDL_Rect itemRect{
+                static_cast<int>(item->position.x),
+                static_cast<int>(item->position.y),
+                item->width,
+                item->height,
+            };
+            const SDL_Rect playerRect{
+                static_cast<int>(m_player.position.x),
+                static_cast<int>(m_player.position.y),
+                m_player.width,
+                m_player.height,
+            };
+            if (SDL_HasIntersection(&itemRect, &playerRect)) {
+                processItemPickup(item);
+                delete item;
+                it = m_items.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
+void SceneMain::renderItems()
+{
+    for (auto* item : m_items) {
+        const SDL_Rect itemRect{
+            static_cast<int>(item->position.x),
+            static_cast<int>(item->position.y),
+            item->width,
+            item->height,
+        };
+        SDL_RenderCopy(m_game.renderer(), item->texture, nullptr, &itemRect);
+    }
+}
+
+void SceneMain::processItemPickup(Item* item)
+{
+    switch (item->type) {
+    case ItemType::Life:
+        ++m_player.currentHealth;
+        if (m_player.currentHealth > m_player.maxHealth) {
+            m_player.currentHealth = m_player.maxHealth;
+        }
+        break;
+    default:
+        break;
     }
 }
