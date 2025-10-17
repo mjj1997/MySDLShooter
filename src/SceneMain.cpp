@@ -384,6 +384,7 @@ void SceneMain::updateEnemies(float deltaTime)
                 if (m_randomDistribution(m_randomEngine) > 0.5f) {
                     dropItem(enemy);
                 }
+                delete enemy;
                 it = m_enemies.erase(it);
             } else {
                 ++it;
@@ -503,7 +504,6 @@ void SceneMain::explodeEnemy(Enemy* enemy)
     explosion->position.y = enemy->position.y + enemy->height / 2 - explosion->height / 2;
     explosion->startTime = currentTime;
     m_explosions.push_back(explosion);
-    delete enemy;
 }
 
 void SceneMain::updateExplosions(float deltaTime)
