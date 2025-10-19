@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Object.h"
 #include "Scene.h"
 
 #include <SDL2/SDL.h>
@@ -23,6 +24,9 @@ public:
     void update(float deltaTime);
     void render();
 
+    void updateBackground(float deltaTime);
+    void renderBackground();
+
     SDL_Window* window() { return m_window; }
     SDL_Renderer* renderer() { return m_renderer; }
     int windowWidth() const { return m_windowWidth; }
@@ -42,4 +46,7 @@ private:
     int m_FPS{ 60 };
     Uint32 m_frameTime{ static_cast<Uint32>(1000) / m_FPS };
     float m_deltaTime{ 0.0f };
+
+    Background m_nearStars;
+    Background m_farStars;
 };
