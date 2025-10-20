@@ -42,12 +42,14 @@ public:
     void updateItems(float deltaTime);
     void renderItems();
     void processItemPickup(Item* item);
+    void renderUI();
 
 private:
     Game& m_game;
     Player m_player;
     Mix_Music* m_bgm;
     std::unordered_map<std::string, Mix_Chunk*> m_sounds;
+    SDL_Texture* m_healthUI;
 
     bool m_isPlayerAlive{ true };
     std::mt19937 m_randomEngine;

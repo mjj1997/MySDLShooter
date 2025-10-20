@@ -35,6 +35,12 @@ void SceneMain::init()
     m_randomEngine = std::mt19937{ randomDevice() };
     m_randomDistribution = std::uniform_real_distribution<float>{ 0.0f, 1.0f };
 
+    // 加载玩家飞机的生命值 UI 纹理
+    m_healthUI = IMG_LoadTexture(m_game.renderer(), "assets/image/Health UI Black.png");
+    if (m_healthUI == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load health UI texture: %s", SDL_GetError());
+    }
+
     // 初始化玩家飞机
     m_player.texture = IMG_LoadTexture(m_game.renderer(), "assets/image/SpaceShip.png");
     if (m_player.texture == nullptr) {
@@ -154,6 +160,8 @@ void SceneMain::render()
     renderItems();
     // 渲染爆炸
     renderExplosions();
+    // 渲染 UI
+    renderUI();
 }
 
 void SceneMain::clean()
@@ -224,6 +232,9 @@ void SceneMain::clean()
     }
     if (m_itemLifeTemplate.texture != nullptr) {
         SDL_DestroyTexture(m_itemLifeTemplate.texture);
+    }
+    if (m_healthUI != nullptr) {
+        SDL_DestroyTexture(m_healthUI);
     }
 
     // 清理背景音乐
@@ -689,5 +700,25 @@ void SceneMain::processItemPickup(Item* item)
         break;
     default:
         break;
+    }
+}
+
+void SceneMain::renderUI()
+{
+    int x{ 10 };
+    int y{ 10 };
+    int size{ 32 };
+    int offset{ 40 };
+
+    SDL_SetTextureColorMod(m_healthUI, 128, 128, 128); // 使颜色变淡
+    for (int i{ 0 }; i < m_player.maxHealth; ++i) {
+        SDL_Rect rect{ x + i * offset, y, size, size };
+        SDL_RenderCopy(m_game.renderer(), m_healthUI, nullptr, &rect);
+    }
+
+    SDL_SetTextureColorMod(m_healthUI, 255, 255, 255); // 恢复颜色
+    for (int i{ 0 }; i < m_player.currentHealth; ++i) {
+        SDL_Rect rect{ x + i * offset, y, size, size };
+        SDL_RenderCopy(m_game.renderer(), m_healthUI, nullptr, &rect);
     }
 }
