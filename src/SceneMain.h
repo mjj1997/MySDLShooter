@@ -24,26 +24,30 @@ public:
     void render() override;
     void clean() override;
 
+private:
+    // 更新相关
     void keyboardControl(float deltaTime);
-    void updatePlayer(float deltaTime);
-    void shootPlayerBullet();
     void updatePlayerBullets(float deltaTime);
-    void renderPlayerBullets();
+    void updateEnemyBullets(float deltaTime);
     void spawnEnemy();
     void updateEnemies(float deltaTime);
-    void renderEnemies();
-    void shootEnemyBullet(Enemy* enemy);
-    void updateEnemyBullets(float deltaTime);
+    void updatePlayer(float deltaTime);
+    void updateExplosions(float deltaTime);
+    void updateItems(float deltaTime);
+    // 渲染相关
+    void renderPlayerBullets();
     void renderEnemyBullets();
+    void renderEnemies();
+    void renderItems();
+    void renderExplosions();
+    void renderUI();
+    // 其它
+    void shootPlayerBullet();
+    void shootEnemyBullet(Enemy* enemy);
     SDL_FPoint getEnemyBulletDirection(Enemy* enemy) const;
     void explodeEnemy(Enemy* enemy);
-    void updateExplosions(float deltaTime);
-    void renderExplosions();
     void dropItem(Enemy* enemy);
-    void updateItems(float deltaTime);
-    void renderItems();
     void processItemPickup(Item* item);
-    void renderUI();
 
 private:
     Game& m_game;

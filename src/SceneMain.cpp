@@ -299,56 +299,6 @@ void SceneMain::keyboardControl(float deltaTime)
     }
 }
 
-void SceneMain::updatePlayer(float deltaTime)
-{
-    if (!m_isPlayerAlive) {
-        return;
-    }
-    if (m_player.currentHealth <= 0) {
-        const auto currentTime{ SDL_GetTicks() };
-        m_isPlayerAlive = false;
-        auto* explosion{ new Explosion{ m_explosionTemplate } };
-        explosion->position.x = m_player.position.x + m_player.width / 2 - explosion->width / 2;
-        explosion->position.y = m_player.position.y + m_player.height / 2 - explosion->height / 2;
-        explosion->startTime = currentTime;
-        m_explosions.push_back(explosion);
-        // 播放玩家爆炸音效
-        Mix_PlayChannel(-1, m_sounds["player_explode"], 0);
-        return;
-    }
-    for (auto* enemy : m_enemies) {
-        const SDL_Rect enemyRect{
-            static_cast<int>(enemy->position.x),
-            static_cast<int>(enemy->position.y),
-            enemy->width,
-            enemy->height,
-        };
-        const SDL_Rect playerRect{
-            static_cast<int>(m_player.position.x),
-            static_cast<int>(m_player.position.y),
-            m_player.width,
-            m_player.height,
-        };
-        if (SDL_HasIntersection(&enemyRect, &playerRect)) {
-            m_player.currentHealth -= 1;
-            enemy->currentHealth = 0;
-        }
-    }
-}
-
-void SceneMain::shootPlayerBullet()
-{
-    // 创建玩家子弹
-    auto* playerBullet{ new PlayerBullet{ m_playerBulletTemplate } };
-    // 设置玩家子弹位置在玩家飞机顶部中央
-    playerBullet->position.x = m_player.position.x + m_player.width / 2 - playerBullet->width / 2;
-    playerBullet->position.y = m_player.position.y;
-    // 添加玩家子弹到列表
-    m_playerBullets.push_back(playerBullet);
-    // 播放玩家射击音效
-    Mix_PlayChannel(0, m_sounds["player_shoot"], 0);
-}
-
 void SceneMain::updatePlayerBullets(float deltaTime)
 {
     const int margin{ 32 }; // 子弹超出窗口边界的距离
@@ -393,16 +343,45 @@ void SceneMain::updatePlayerBullets(float deltaTime)
     }
 }
 
-void SceneMain::renderPlayerBullets()
+void SceneMain::updateEnemyBullets(float deltaTime)
 {
-    for (auto* playerBullet : m_playerBullets) {
-        const SDL_Rect playerBulletRect{
-            static_cast<int>(playerBullet->position.x),
-            static_cast<int>(playerBullet->position.y),
-            playerBullet->width,
-            playerBullet->height,
-        };
-        SDL_RenderCopy(m_game.renderer(), playerBullet->texture, nullptr, &playerBulletRect);
+    const int margin{ 32 }; // 子弹超出窗口边界的距离
+    for (auto it{ m_enemyBullets.begin() }; it != m_enemyBullets.end();) {
+        auto* enemyBullet{ *it };
+        // 更新敌人子弹位置
+        enemyBullet->position.x += enemyBullet->direction.x * enemyBullet->speed * deltaTime;
+        enemyBullet->position.y += enemyBullet->direction.y * enemyBullet->speed * deltaTime;
+        // 如果敌人子弹超出窗口边界，移除敌人子弹
+        if (enemyBullet->position.x < -margin
+            || enemyBullet->position.x > m_game.windowWidth() + margin
+            || enemyBullet->position.y < -margin
+            || enemyBullet->position.y > m_game.windowHeight() + margin) {
+            delete enemyBullet;
+            it = m_enemyBullets.erase(it);
+        } else {
+            // 检查敌人子弹是否击中玩家
+            const SDL_Rect playerRect{
+                static_cast<int>(m_player.position.x),
+                static_cast<int>(m_player.position.y),
+                m_player.width,
+                m_player.height,
+            };
+            const SDL_Rect enemyBulletRect{
+                static_cast<int>(enemyBullet->position.x),
+                static_cast<int>(enemyBullet->position.y),
+                enemyBullet->width,
+                enemyBullet->height,
+            };
+            if (SDL_HasIntersection(&playerRect, &enemyBulletRect) && m_isPlayerAlive != false) {
+                m_player.currentHealth -= enemyBullet->damage;
+                delete enemyBullet;
+                it = m_enemyBullets.erase(it);
+                // 播放击中音效
+                Mix_PlayChannel(-1, m_sounds["hit"], 0);
+            } else {
+                ++it;
+            }
+        }
     }
 }
 
@@ -456,8 +435,23 @@ void SceneMain::updateEnemies(float deltaTime)
     }
 }
 
-void SceneMain::renderEnemies()
+void SceneMain::updatePlayer(float deltaTime)
 {
+    if (!m_isPlayerAlive) {
+        return;
+    }
+    if (m_player.currentHealth <= 0) {
+        const auto currentTime{ SDL_GetTicks() };
+        m_isPlayerAlive = false;
+        auto* explosion{ new Explosion{ m_explosionTemplate } };
+        explosion->position.x = m_player.position.x + m_player.width / 2 - explosion->width / 2;
+        explosion->position.y = m_player.position.y + m_player.height / 2 - explosion->height / 2;
+        explosion->startTime = currentTime;
+        m_explosions.push_back(explosion);
+        // 播放玩家爆炸音效
+        Mix_PlayChannel(-1, m_sounds["player_explode"], 0);
+        return;
+    }
     for (auto* enemy : m_enemies) {
         const SDL_Rect enemyRect{
             static_cast<int>(enemy->position.x),
@@ -465,112 +459,17 @@ void SceneMain::renderEnemies()
             enemy->width,
             enemy->height,
         };
-        SDL_RenderCopy(m_game.renderer(), enemy->texture, nullptr, &enemyRect);
-    }
-}
-
-void SceneMain::shootEnemyBullet(Enemy* enemy)
-{
-    // 创建敌人子弹
-    auto* enemyBullet{ new EnemyBullet{ m_enemyBulletTemplate } };
-    // 设置敌人子弹位置在敌人飞机中心
-    enemyBullet->position.x = enemy->position.x + enemy->width / 2 - enemyBullet->width / 2;
-    enemyBullet->position.y = enemy->position.y + enemy->height / 2 - enemyBullet->height / 2;
-    // 设置敌人子弹方向
-    enemyBullet->direction = getEnemyBulletDirection(enemy);
-    // 添加敌人子弹到列表
-    m_enemyBullets.push_back(enemyBullet);
-    // 播放敌人射击音效
-    Mix_PlayChannel(-1, m_sounds["enemy_shoot"], 0);
-}
-
-void SceneMain::updateEnemyBullets(float deltaTime)
-{
-    const int margin{ 32 }; // 子弹超出窗口边界的距离
-    for (auto it{ m_enemyBullets.begin() }; it != m_enemyBullets.end();) {
-        auto* enemyBullet{ *it };
-        // 更新敌人子弹位置
-        enemyBullet->position.x += enemyBullet->direction.x * enemyBullet->speed * deltaTime;
-        enemyBullet->position.y += enemyBullet->direction.y * enemyBullet->speed * deltaTime;
-        // 如果敌人子弹超出窗口边界，移除敌人子弹
-        if (enemyBullet->position.x < -margin
-            || enemyBullet->position.x > m_game.windowWidth() + margin
-            || enemyBullet->position.y < -margin
-            || enemyBullet->position.y > m_game.windowHeight() + margin) {
-            delete enemyBullet;
-            it = m_enemyBullets.erase(it);
-        } else {
-            // 检查敌人子弹是否击中玩家
-            const SDL_Rect playerRect{
-                static_cast<int>(m_player.position.x),
-                static_cast<int>(m_player.position.y),
-                m_player.width,
-                m_player.height,
-            };
-            const SDL_Rect enemyBulletRect{
-                static_cast<int>(enemyBullet->position.x),
-                static_cast<int>(enemyBullet->position.y),
-                enemyBullet->width,
-                enemyBullet->height,
-            };
-            if (SDL_HasIntersection(&playerRect, &enemyBulletRect) && m_isPlayerAlive != false) {
-                m_player.currentHealth -= enemyBullet->damage;
-                delete enemyBullet;
-                it = m_enemyBullets.erase(it);
-                // 播放击中音效
-                Mix_PlayChannel(-1, m_sounds["hit"], 0);
-            } else {
-                ++it;
-            }
+        const SDL_Rect playerRect{
+            static_cast<int>(m_player.position.x),
+            static_cast<int>(m_player.position.y),
+            m_player.width,
+            m_player.height,
+        };
+        if (SDL_HasIntersection(&enemyRect, &playerRect)) {
+            m_player.currentHealth -= 1;
+            enemy->currentHealth = 0;
         }
     }
-}
-
-void SceneMain::renderEnemyBullets()
-{
-    for (auto* enemyBullet : m_enemyBullets) {
-        const SDL_Rect enemyBulletRect{
-            static_cast<int>(enemyBullet->position.x),
-            static_cast<int>(enemyBullet->position.y),
-            enemyBullet->width,
-            enemyBullet->height,
-        };
-        auto angle{ SDL_atan2(enemyBullet->direction.y, enemyBullet->direction.x)
-                        * (180 / std::numbers::pi)
-                    - 90 };
-        SDL_RenderCopyEx(m_game.renderer(),
-                         enemyBullet->texture,
-                         nullptr,
-                         &enemyBulletRect,
-                         angle,
-                         nullptr,
-                         SDL_FLIP_NONE);
-    }
-}
-
-SDL_FPoint SceneMain::getEnemyBulletDirection(Enemy* enemy) const
-{
-    // 计算敌人子弹方向向量
-    SDL_FPoint direction{
-        (m_player.position.x + m_player.width / 2) - (enemy->position.x + enemy->width / 2),
-        (m_player.position.y + m_player.height / 2) - (enemy->position.y + enemy->height / 2),
-    };
-    // 归一化方向向量
-    float length{ SDL_sqrtf(direction.x * direction.x + direction.y * direction.y) };
-    direction.x /= length;
-    direction.y /= length;
-
-    return direction;
-}
-
-void SceneMain::explodeEnemy(Enemy* enemy)
-{
-    const auto currentTime{ SDL_GetTicks() };
-    auto* explosion{ new Explosion{ m_explosionTemplate } };
-    explosion->position.x = enemy->position.x + enemy->width / 2 - explosion->width / 2;
-    explosion->position.y = enemy->position.y + enemy->height / 2 - explosion->height / 2;
-    explosion->startTime = currentTime;
-    m_explosions.push_back(explosion);
 }
 
 void SceneMain::updateExplosions(float deltaTime)
@@ -588,39 +487,6 @@ void SceneMain::updateExplosions(float deltaTime)
             ++it;
         }
     }
-}
-
-void SceneMain::renderExplosions()
-{
-    for (auto* explosion : m_explosions) {
-        const SDL_Rect srcRect{
-            explosion->currentFrame * explosion->width,
-            0,
-            explosion->width,
-            explosion->height,
-        };
-        const SDL_Rect dstRect{
-            static_cast<int>(explosion->position.x),
-            static_cast<int>(explosion->position.y),
-            explosion->width,
-            explosion->height,
-        };
-        SDL_RenderCopy(m_game.renderer(), explosion->texture, &srcRect, &dstRect);
-    }
-}
-
-void SceneMain::dropItem(Enemy* enemy)
-{
-    auto* item{ new Item{ m_itemLifeTemplate } };
-    item->position.x = enemy->position.x + enemy->width / 2 - item->width / 2;
-    item->position.y = enemy->position.y + enemy->height / 2 - item->height / 2;
-
-    // 生成物品随机方向
-    float angle{ static_cast<float>(m_randomDistribution(m_randomEngine) * 2 * std::numbers::pi) };
-    item->direction.x = SDL_cosf(angle);
-    item->direction.y = SDL_sinf(angle);
-
-    m_items.push_back(item);
 }
 
 void SceneMain::updateItems(float deltaTime)
@@ -686,6 +552,55 @@ void SceneMain::updateItems(float deltaTime)
     }
 }
 
+// 渲染相关函数
+void SceneMain::renderPlayerBullets()
+{
+    for (auto* playerBullet : m_playerBullets) {
+        const SDL_Rect playerBulletRect{
+            static_cast<int>(playerBullet->position.x),
+            static_cast<int>(playerBullet->position.y),
+            playerBullet->width,
+            playerBullet->height,
+        };
+        SDL_RenderCopy(m_game.renderer(), playerBullet->texture, nullptr, &playerBulletRect);
+    }
+}
+
+void SceneMain::renderEnemyBullets()
+{
+    for (auto* enemyBullet : m_enemyBullets) {
+        const SDL_Rect enemyBulletRect{
+            static_cast<int>(enemyBullet->position.x),
+            static_cast<int>(enemyBullet->position.y),
+            enemyBullet->width,
+            enemyBullet->height,
+        };
+        auto angle{ SDL_atan2(enemyBullet->direction.y, enemyBullet->direction.x)
+                        * (180 / std::numbers::pi)
+                    - 90 };
+        SDL_RenderCopyEx(m_game.renderer(),
+                         enemyBullet->texture,
+                         nullptr,
+                         &enemyBulletRect,
+                         angle,
+                         nullptr,
+                         SDL_FLIP_NONE);
+    }
+}
+
+void SceneMain::renderEnemies()
+{
+    for (auto* enemy : m_enemies) {
+        const SDL_Rect enemyRect{
+            static_cast<int>(enemy->position.x),
+            static_cast<int>(enemy->position.y),
+            enemy->width,
+            enemy->height,
+        };
+        SDL_RenderCopy(m_game.renderer(), enemy->texture, nullptr, &enemyRect);
+    }
+}
+
 void SceneMain::renderItems()
 {
     for (auto* item : m_items) {
@@ -699,19 +614,22 @@ void SceneMain::renderItems()
     }
 }
 
-void SceneMain::processItemPickup(Item* item)
+void SceneMain::renderExplosions()
 {
-    switch (item->type) {
-    case ItemType::Life:
-        ++m_player.currentHealth;
-        if (m_player.currentHealth > m_player.maxHealth) {
-            m_player.currentHealth = m_player.maxHealth;
-        }
-        // 播放拾取物品音效
-        Mix_PlayChannel(-1, m_sounds["get_item"], 0);
-        break;
-    default:
-        break;
+    for (auto* explosion : m_explosions) {
+        const SDL_Rect srcRect{
+            explosion->currentFrame * explosion->width,
+            0,
+            explosion->width,
+            explosion->height,
+        };
+        const SDL_Rect dstRect{
+            static_cast<int>(explosion->position.x),
+            static_cast<int>(explosion->position.y),
+            explosion->width,
+            explosion->height,
+        };
+        SDL_RenderCopy(m_game.renderer(), explosion->texture, &srcRect, &dstRect);
     }
 }
 
@@ -743,4 +661,92 @@ void SceneMain::renderUI()
     SDL_RenderCopy(m_game.renderer(), textTexture, nullptr, &rect);
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
+}
+
+// 其它函数
+void SceneMain::shootPlayerBullet()
+{
+    // 创建玩家子弹
+    auto* playerBullet{ new PlayerBullet{ m_playerBulletTemplate } };
+    // 设置玩家子弹位置在玩家飞机顶部中央
+    playerBullet->position.x = m_player.position.x + m_player.width / 2 - playerBullet->width / 2;
+    playerBullet->position.y = m_player.position.y;
+    // 添加玩家子弹到列表
+    m_playerBullets.push_back(playerBullet);
+    // 播放玩家射击音效
+    Mix_PlayChannel(0, m_sounds["player_shoot"], 0);
+}
+
+void SceneMain::shootEnemyBullet(Enemy* enemy)
+{
+    // 创建敌人子弹
+    auto* enemyBullet{ new EnemyBullet{ m_enemyBulletTemplate } };
+    // 设置敌人子弹位置在敌人飞机中心
+    enemyBullet->position.x = enemy->position.x + enemy->width / 2 - enemyBullet->width / 2;
+    enemyBullet->position.y = enemy->position.y + enemy->height / 2 - enemyBullet->height / 2;
+    // 设置敌人子弹方向
+    enemyBullet->direction = getEnemyBulletDirection(enemy);
+    // 添加敌人子弹到列表
+    m_enemyBullets.push_back(enemyBullet);
+    // 播放敌人射击音效
+    Mix_PlayChannel(-1, m_sounds["enemy_shoot"], 0);
+}
+
+SDL_FPoint SceneMain::getEnemyBulletDirection(Enemy* enemy) const
+{
+    // 计算敌人子弹方向向量
+    SDL_FPoint direction{
+        (m_player.position.x + m_player.width / 2) - (enemy->position.x + enemy->width / 2),
+        (m_player.position.y + m_player.height / 2) - (enemy->position.y + enemy->height / 2),
+    };
+    // 归一化方向向量
+    float length{ SDL_sqrtf(direction.x * direction.x + direction.y * direction.y) };
+    direction.x /= length;
+    direction.y /= length;
+
+    return direction;
+}
+
+void SceneMain::explodeEnemy(Enemy* enemy)
+{
+    const auto currentTime{ SDL_GetTicks() };
+    auto* explosion{ new Explosion{ m_explosionTemplate } };
+    explosion->position.x = enemy->position.x + enemy->width / 2 - explosion->width / 2;
+    explosion->position.y = enemy->position.y + enemy->height / 2 - explosion->height / 2;
+    explosion->startTime = currentTime;
+    m_explosions.push_back(explosion);
+
+    m_score += 10;
+}
+
+void SceneMain::dropItem(Enemy* enemy)
+{
+    auto* item{ new Item{ m_itemLifeTemplate } };
+    item->position.x = enemy->position.x + enemy->width / 2 - item->width / 2;
+    item->position.y = enemy->position.y + enemy->height / 2 - item->height / 2;
+
+    // 生成物品随机方向
+    float angle{ static_cast<float>(m_randomDistribution(m_randomEngine) * 2 * std::numbers::pi) };
+    item->direction.x = SDL_cosf(angle);
+    item->direction.y = SDL_sinf(angle);
+
+    m_items.push_back(item);
+}
+
+void SceneMain::processItemPickup(Item* item)
+{
+    m_score += 5;
+
+    switch (item->type) {
+    case ItemType::Life:
+        ++m_player.currentHealth;
+        if (m_player.currentHealth > m_player.maxHealth) {
+            m_player.currentHealth = m_player.maxHealth;
+        }
+        // 播放拾取物品音效
+        Mix_PlayChannel(-1, m_sounds["get_item"], 0);
+        break;
+    default:
+        break;
+    }
 }
