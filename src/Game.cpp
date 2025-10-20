@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_ttf.h>
 
 void Game::init()
 {
@@ -58,6 +59,13 @@ void Game::init()
     }
     // 设置音效channel数量
     Mix_AllocateChannels(32);
+    // 初始化字体
+    if (TTF_Init() != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,
+                     "SDL_ttf could not initialize! SDL_ttf Error: %s\n",
+                     TTF_GetError());
+        m_isRunning = false;
+    }
 
     // 初始化背景
     m_nearStars.texture = IMG_LoadTexture(m_renderer, "assets/image/Stars-A.png");
@@ -121,6 +129,8 @@ void Game::clean()
     // 清理SDL_mixer
     Mix_CloseAudio();
     Mix_Quit();
+    // 清理字体
+    TTF_Quit();
     // 清理并退出
     SDL_DestroyRenderer(m_renderer);
     SDL_DestroyWindow(m_window);

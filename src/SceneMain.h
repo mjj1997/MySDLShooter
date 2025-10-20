@@ -4,6 +4,7 @@
 #include "Scene.h"
 
 #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <list>
 #include <random>
@@ -50,8 +51,11 @@ private:
     Mix_Music* m_bgm;
     std::unordered_map<std::string, Mix_Chunk*> m_sounds;
     SDL_Texture* m_healthUI;
+    TTF_Font* m_scoreFont;
 
     bool m_isPlayerAlive{ true };
+    int m_score{ 0 };
+
     std::mt19937 m_randomEngine;
     std::uniform_real_distribution<float> m_randomDistribution;
     // 创建所有 Object 的模板

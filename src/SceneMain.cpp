@@ -8,6 +8,7 @@
 
 #include <numbers>
 #include <random>
+#include <string>
 
 SceneMain::SceneMain()
     : m_game(Game::instance())
@@ -39,6 +40,12 @@ void SceneMain::init()
     m_healthUI = IMG_LoadTexture(m_game.renderer(), "assets/image/Health UI Black.png");
     if (m_healthUI == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load health UI texture: %s", SDL_GetError());
+    }
+
+    // 打开字体
+    m_scoreFont = TTF_OpenFont("assets/font/VonwaonBitmap-12px.ttf", 24);
+    if (m_scoreFont == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", TTF_GetError());
     }
 
     // 初始化玩家飞机
@@ -235,6 +242,11 @@ void SceneMain::clean()
     }
     if (m_healthUI != nullptr) {
         SDL_DestroyTexture(m_healthUI);
+    }
+
+    // 清理字体
+    if (m_scoreFont != nullptr) {
+        TTF_CloseFont(m_scoreFont);
     }
 
     // 清理背景音乐
@@ -721,4 +733,14 @@ void SceneMain::renderUI()
         SDL_Rect rect{ x + i * offset, y, size, size };
         SDL_RenderCopy(m_game.renderer(), m_healthUI, nullptr, &rect);
     }
+
+    // 渲染得分
+    auto scoreText{ "SCORE: " + std::to_string(m_score) };
+    SDL_Color textColor{ 255, 255, 255, 255 };
+    SDL_Surface* textSurface{ TTF_RenderUTF8_Solid(m_scoreFont, scoreText.c_str(), textColor) };
+    SDL_Texture* textTexture{ SDL_CreateTextureFromSurface(m_game.renderer(), textSurface) };
+    SDL_Rect rect{ m_game.windowWidth() - 10 - textSurface->w, 10, textSurface->w, textSurface->h };
+    SDL_RenderCopy(m_game.renderer(), textTexture, nullptr, &rect);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
 }
