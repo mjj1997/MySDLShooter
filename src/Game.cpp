@@ -16,7 +16,7 @@ void Game::init()
         m_isRunning = false;
     }
     // 创建窗口
-    m_window = SDL_CreateWindow("Hello World!",
+    m_window = SDL_CreateWindow("SDL 太空战机",
                                 SDL_WINDOWPOS_CENTERED,
                                 SDL_WINDOWPOS_CENTERED,
                                 m_windowWidth,
