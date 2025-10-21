@@ -1,5 +1,5 @@
 #include "Game.h"
-#include "SceneMain.h"
+#include "SceneTitle.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -16,7 +16,7 @@ void Game::init()
         m_isRunning = false;
     }
     // 创建窗口
-    m_window = SDL_CreateWindow("Hello World!",
+    m_window = SDL_CreateWindow("SDL 太空战机",
                                 SDL_WINDOWPOS_CENTERED,
                                 SDL_WINDOWPOS_CENTERED,
                                 m_windowWidth,
@@ -79,7 +79,17 @@ void Game::init()
     m_farStars.height /= 2;
     m_farStars.speed = 20;
 
-    m_currentScene = new SceneMain;
+    // 打开字体
+    m_titleFont = TTF_OpenFont("assets/font/VonwaonBitmap-16px.ttf", 64);
+    m_textFont = TTF_OpenFont("assets/font/VonwaonBitmap-16px.ttf", 32);
+    if (m_titleFont == nullptr || m_textFont == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,
+                     "SDL_ttf could not load font! SDL_ttf Error: %s\n",
+                     TTF_GetError());
+        m_isRunning = false;
+    }
+
+    m_currentScene = new SceneTitle;
     m_currentScene->init();
 }
 
@@ -130,6 +140,12 @@ void Game::clean()
     Mix_CloseAudio();
     Mix_Quit();
     // 清理字体
+    if (m_titleFont != nullptr) {
+        TTF_CloseFont(m_titleFont);
+    }
+    if (m_textFont != nullptr) {
+        TTF_CloseFont(m_textFont);
+    }
     TTF_Quit();
     // 清理并退出
     SDL_DestroyRenderer(m_renderer);
@@ -164,6 +180,19 @@ void Game::render()
     SDL_RenderPresent(m_renderer);
 }
 
+void Game::renderTextCenterred(std::string_view text, float ratioY, bool isTitle)
+{
+    TTF_Font* font = isTitle ? m_titleFont : m_textFont;
+    SDL_Color color{ 255, 255, 255, 255 };
+    SDL_Surface* surface{ TTF_RenderUTF8_Solid(font, text.data(), color) };
+    SDL_Texture* texture{ SDL_CreateTextureFromSurface(m_renderer, surface) };
+    int posX{ (m_windowWidth - surface->w) / 2 };
+    int posY{ static_cast<int>(ratioY * (m_windowHeight - surface->h)) };
+    SDL_Rect destRect{ posX, posY, surface->w, surface->h };
+    SDL_RenderCopy(m_renderer, texture, nullptr, &destRect);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
+}
 void Game::updateBackground(float deltaTime)
 {
     m_nearStars.offset += m_nearStars.speed * deltaTime;

@@ -1,6 +1,12 @@
 add_executable(SDLShooter)
 
-target_sources(SDLShooter PRIVATE main.cpp Game.cpp SceneMain.cpp)
+target_sources(
+  SDLShooter
+  PRIVATE main.cpp
+          Game.cpp
+          Scene.cpp
+          SceneMain.cpp
+          SceneTitle.cpp)
 
 target_link_libraries(
   SDLShooter

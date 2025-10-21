@@ -1,6 +1,7 @@
 #include "SceneMain.h"
 #include "Game.h"
 #include "Object.h"
+#include "SceneTitle.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -9,10 +10,6 @@
 #include <numbers>
 #include <random>
 #include <string>
-
-SceneMain::SceneMain()
-    : m_game(Game::instance())
-{}
 
 void SceneMain::init()
 {
@@ -129,7 +126,14 @@ void SceneMain::init()
     m_itemLifeTemplate.height /= 4;
 }
 
-void SceneMain::handleEvent(SDL_Event* event) {}
+void SceneMain::handleEvent(SDL_Event* event)
+{
+    if (event->type == SDL_KEYDOWN) {
+        if (event->key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+            m_game.changeScene(new SceneTitle);
+        }
+    }
+}
 
 void SceneMain::update(float deltaTime)
 {
