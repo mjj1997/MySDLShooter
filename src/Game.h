@@ -4,6 +4,9 @@
 #include "Scene.h"
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+
+#include <string_view>
 
 class Game
 {
@@ -36,6 +39,9 @@ private:
     Game() = default;
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
+
+    TTF_Font* m_titleFont;
+    TTF_Font* m_textFont;
 
     bool m_isRunning{ true };
     Scene* m_currentScene{ nullptr };

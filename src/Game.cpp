@@ -80,6 +80,16 @@ void Game::init()
     m_farStars.speed = 20;
 
     m_currentScene = new SceneMain;
+    // 打开字体
+    m_titleFont = TTF_OpenFont("assets/font/VonwaonBitmap-16px.ttf", 64);
+    m_textFont = TTF_OpenFont("assets/font/VonwaonBitmap-16px.ttf", 32);
+    if (m_titleFont == nullptr || m_textFont == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR,
+                     "SDL_ttf could not load font! SDL_ttf Error: %s\n",
+                     TTF_GetError());
+        m_isRunning = false;
+    }
+
     m_currentScene->init();
 }
 
@@ -130,6 +140,12 @@ void Game::clean()
     Mix_CloseAudio();
     Mix_Quit();
     // 清理字体
+    if (m_titleFont != nullptr) {
+        TTF_CloseFont(m_titleFont);
+    }
+    if (m_textFont != nullptr) {
+        TTF_CloseFont(m_textFont);
+    }
     TTF_Quit();
     // 清理并退出
     SDL_DestroyRenderer(m_renderer);
