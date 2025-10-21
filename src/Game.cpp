@@ -180,7 +180,7 @@ void Game::render()
     SDL_RenderPresent(m_renderer);
 }
 
-void Game::renderTextCenterred(std::string_view text, float ratioY, bool isTitle)
+SDL_Point Game::renderTextCenterred(std::string_view text, float ratioY, bool isTitle)
 {
     TTF_Font* font = isTitle ? m_titleFont : m_textFont;
     SDL_Color color{ 255, 255, 255, 255 };
@@ -193,6 +193,7 @@ void Game::renderTextCenterred(std::string_view text, float ratioY, bool isTitle
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
 
+    return { posX + surface->w, posY };
 }
 
 void Game::renderTextPositioned(std::string_view text, int x, int y)
