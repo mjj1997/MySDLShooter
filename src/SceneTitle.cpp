@@ -1,4 +1,5 @@
 #include "SceneTitle.h"
+#include "Game.h"
 
 #include <SDL2/SDL.h>
 
@@ -12,6 +13,13 @@ void SceneTitle::init()
     Mix_PlayMusic(m_bgm, -1);
 }
 
+void SceneTitle::render()
+{
+    // 渲染标题
+    m_game.renderTextCenterred("SDL 太空战机", 0.4f, true);
+    // 渲染开始游戏提示
+        m_game.renderTextCenterred("按 J 键开始游戏", 0.8f, false);
+}
 
 void SceneTitle::clean()
 {
