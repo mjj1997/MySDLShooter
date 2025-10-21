@@ -1,5 +1,5 @@
 #include "Game.h"
-#include "SceneMain.h"
+#include "SceneTitle.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -79,7 +79,6 @@ void Game::init()
     m_farStars.height /= 2;
     m_farStars.speed = 20;
 
-    m_currentScene = new SceneMain;
     // 打开字体
     m_titleFont = TTF_OpenFont("assets/font/VonwaonBitmap-16px.ttf", 64);
     m_textFont = TTF_OpenFont("assets/font/VonwaonBitmap-16px.ttf", 32);
@@ -90,6 +89,7 @@ void Game::init()
         m_isRunning = false;
     }
 
+    m_currentScene = new SceneTitle;
     m_currentScene->init();
 }
 
