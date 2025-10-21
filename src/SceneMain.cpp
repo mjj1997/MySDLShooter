@@ -457,6 +457,8 @@ void SceneMain::updatePlayer(float deltaTime)
         m_explosions.push_back(explosion);
         // 播放玩家爆炸音效
         Mix_PlayChannel(-1, m_sounds["player_explode"], 0);
+        // 设置游戏最终得分
+        m_game.setFinalScore(m_score);
         return;
     }
     for (auto* enemy : m_enemies) {

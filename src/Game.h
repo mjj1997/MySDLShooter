@@ -38,6 +38,9 @@ public:
     int windowWidth() const { return m_windowWidth; }
     int windowHeight() const { return m_windowHeight; }
 
+    int finalScore() const { return m_finalScore; }
+    void setFinalScore(int score) { m_finalScore = score; }
+
 private:
     Game() = default;
     Game(const Game&) = delete;
@@ -55,6 +58,7 @@ private:
     int m_FPS{ 60 };
     Uint32 m_frameTime{ static_cast<Uint32>(1000) / m_FPS };
     float m_deltaTime{ 0.0f };
+    int m_finalScore{ 0 };
 
     Background m_nearStars;
     Background m_farStars;
