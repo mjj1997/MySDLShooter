@@ -29,7 +29,7 @@ void SceneEnd::handleEvent(SDL_Event* event)
             }
             if (event->key.keysym.scancode == SDL_SCANCODE_BACKSPACE) {
                 if (!m_playerName.empty()) {
-                    m_playerName.pop_back();
+                    removeLastUTF8Char(m_playerName);
                 }
             }
         }
@@ -58,4 +58,17 @@ void SceneEnd::clean()
     if (SDL_IsTextInputActive()) {
         SDL_StopTextInput();
     }
+}
+
+void SceneEnd::removeLastUTF8Char(std::string& str)
+{
+    auto lastChar{ str.back() };
+    if ((lastChar & 0b10000000) == 0b10000000) { // 检查是否为多字节字符的后续字节
+        str.pop_back();
+        while ((str.back() & 0b11000000) != 0b11000000) { // 继续弹出直到遇到起始字节
+            str.pop_back();
+        }
+    }
+    // 弹出 ASCII 字符
+    str.pop_back();
 }

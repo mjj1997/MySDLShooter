@@ -17,6 +17,8 @@ public:
     void clean() override;
 
 private:
+    void removeLastUTF8Char(std::string& str);
+
     bool m_isTyping{ true };
     std::string m_playerName;
 };
