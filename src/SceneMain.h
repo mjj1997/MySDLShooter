@@ -10,12 +10,10 @@
 #include <random>
 #include <unordered_map>
 
-class Game;
-
 class SceneMain : public Scene
 {
 public:
-    SceneMain();
+    SceneMain() = default;
     ~SceneMain() override = default;
 
     void init() override;
@@ -50,7 +48,6 @@ private:
     void processItemPickup(Item* item);
 
 private:
-    Game& m_game;
     Player m_player;
     Mix_Music* m_bgm;
     std::unordered_map<std::string, Mix_Chunk*> m_sounds;

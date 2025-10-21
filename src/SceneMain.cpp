@@ -10,10 +10,6 @@
 #include <random>
 #include <string>
 
-SceneMain::SceneMain()
-    : m_game(Game::instance())
-{}
-
 void SceneMain::init()
 {
     // 加载并播放背景音乐
