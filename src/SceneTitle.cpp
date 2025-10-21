@@ -1,5 +1,6 @@
 #include "SceneTitle.h"
 #include "Game.h"
+#include "SceneMain.h"
 
 #include <SDL2/SDL.h>
 
@@ -11,6 +12,15 @@ void SceneTitle::init()
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load background music: %s", Mix_GetError());
     }
     Mix_PlayMusic(m_bgm, -1);
+}
+
+void SceneTitle::handleEvent(SDL_Event* event)
+{
+    if (event->type == SDL_KEYDOWN) {
+        if (event->key.keysym.scancode == SDL_SCANCODE_J) {
+            m_game.changeScene(new SceneMain);
+        }
+    }
 }
 
 void SceneTitle::render()
