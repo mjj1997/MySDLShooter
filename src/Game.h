@@ -27,6 +27,9 @@ public:
     void update(float deltaTime);
     void render();
 
+    // 渲染居中文本帮助函数
+    void renderTextCenterred(std::string_view text, float ratioY, bool isTitle);
+
     void updateBackground(float deltaTime);
     void renderBackground();
 

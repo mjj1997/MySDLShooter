@@ -180,6 +180,19 @@ void Game::render()
     SDL_RenderPresent(m_renderer);
 }
 
+void Game::renderTextCenterred(std::string_view text, float ratioY, bool isTitle)
+{
+    TTF_Font* font = isTitle ? m_titleFont : m_textFont;
+    SDL_Color color{ 255, 255, 255, 255 };
+    SDL_Surface* surface{ TTF_RenderUTF8_Solid(font, text.data(), color) };
+    SDL_Texture* texture{ SDL_CreateTextureFromSurface(m_renderer, surface) };
+    int posX{ (m_windowWidth - surface->w) / 2 };
+    int posY{ static_cast<int>(ratioY * (m_windowHeight - surface->h)) };
+    SDL_Rect destRect{ posX, posY, surface->w, surface->h };
+    SDL_RenderCopy(m_renderer, texture, nullptr, &destRect);
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
+}
 void Game::updateBackground(float deltaTime)
 {
     m_nearStars.offset += m_nearStars.speed * deltaTime;
