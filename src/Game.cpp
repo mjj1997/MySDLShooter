@@ -193,7 +193,7 @@ SDL_Point Game::renderTextCenterred(std::string_view text, float ratioY, bool is
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
 
-    return { posX + surface->w, posY };
+    return { destRect.x + destRect.w, destRect.y };
 }
 
 void Game::renderTextPositioned(std::string_view text, int x, int y)
