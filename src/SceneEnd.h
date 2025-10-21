@@ -2,6 +2,8 @@
 
 #include "Scene.h"
 
+#include <string>
+
 class SceneEnd : public Scene
 {
 public:
@@ -13,4 +15,8 @@ public:
     void update(float deltaTime) override;
     void render() override;
     void clean() override;
+
+private:
+    bool m_isTyping{ true };
+    std::string m_playerName;
 };
