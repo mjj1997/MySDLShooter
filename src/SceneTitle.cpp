@@ -23,11 +23,20 @@ void SceneTitle::handleEvent(SDL_Event* event)
     }
 }
 
+void SceneTitle::update(float deltaTime)
+{
+    m_timer += deltaTime;
+    if (m_timer > 1.0f) {
+        m_timer = 0.0f;
+    }
+}
+
 void SceneTitle::render()
 {
     // 渲染标题
     m_game.renderTextCenterred("SDL 太空战机", 0.4f, true);
     // 渲染开始游戏提示
+    if (m_timer < 0.5f)
         m_game.renderTextCenterred("按 J 键开始游戏", 0.8f, false);
 }
 

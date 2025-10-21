@@ -18,4 +18,5 @@ public:
 
 private:
     Mix_Music* m_bgm;
+    float m_timer{ 0.0f };
 };
