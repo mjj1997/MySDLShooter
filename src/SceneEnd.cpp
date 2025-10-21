@@ -36,7 +36,13 @@ void SceneEnd::handleEvent(SDL_Event* event)
     }
 }
 
-void SceneEnd::update(float deltaTime) {}
+void SceneEnd::update(float deltaTime)
+{
+    m_timer += deltaTime;
+    if (m_timer >= 1.0f) {
+        m_timer = 0.0f;
+    }
+}
 
 void SceneEnd::render()
 {
@@ -49,7 +55,14 @@ void SceneEnd::render()
     m_game.renderTextCenterred("请输入你的名字，按回车键确认：", 0.6f, false);
     // 渲染玩家输入的名字
     if (!m_playerName.empty()) {
-        m_game.renderTextCenterred(m_playerName, 0.8f, false);
+        SDL_Point cornerUpRigt{ m_game.renderTextCenterred(m_playerName, 0.8f, false) };
+        if (m_timer < 0.5f) {
+            m_game.renderTextPositioned("_", cornerUpRigt.x, cornerUpRigt.y);
+        }
+    } else {
+        if (m_timer < 0.5f) {
+            m_game.renderTextCenterred("_", 0.8f, false);
+        }
     }
 }
 

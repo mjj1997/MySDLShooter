@@ -21,4 +21,5 @@ private:
 
     bool m_isTyping{ true };
     std::string m_playerName;
+    float m_timer{ 0.0f };
 };
