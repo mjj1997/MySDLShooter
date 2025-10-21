@@ -1,6 +1,7 @@
 #include "SceneMain.h"
 #include "Game.h"
 #include "Object.h"
+#include "SceneEnd.h"
 #include "SceneTitle.h"
 
 #include <SDL2/SDL.h>
@@ -145,6 +146,8 @@ void SceneMain::update(float deltaTime)
     updatePlayer(deltaTime);
     updateExplosions(deltaTime);
     updateItems(deltaTime);
+    if (m_isPlayerAlive == false)
+        delayChangingScene(deltaTime, 3.0f); // 3 秒后切换到结束场景
 }
 
 void SceneMain::render()
@@ -553,6 +556,14 @@ void SceneMain::updateItems(float deltaTime)
                 ++it;
             }
         }
+    }
+}
+
+void SceneMain::delayChangingScene(float deltaTime, float delay)
+{
+    m_timer += deltaTime;
+    if (m_timer >= delay) {
+        m_game.changeScene(new SceneEnd);
     }
 }
 
