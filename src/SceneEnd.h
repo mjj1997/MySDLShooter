@@ -18,6 +18,8 @@ public:
 
 private:
     void removeLastUTF8Char(std::string& str);
+    void renderNameInputUi();
+    void renderLeaderBoard();
 
     bool m_isTyping{ true };
     std::string m_playerName;

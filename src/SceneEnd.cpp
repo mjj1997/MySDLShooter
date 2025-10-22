@@ -56,23 +56,10 @@ void SceneEnd::update(float deltaTime)
 
 void SceneEnd::render()
 {
-    std::string scoreText{ "你的最终得分：" + std::to_string(m_game.finalScore()) };
-    // 渲染最终得分
-    m_game.renderTextCenterred(scoreText, 0.1f, false);
-    // 渲染游戏结束文本
-    m_game.renderTextCenterred("Game Over", 0.4f, true);
-    // 渲染输入提示文本
-    m_game.renderTextCenterred("请输入你的名字，按回车键确认：", 0.6f, false);
-    // 渲染玩家输入的名字
-    if (!m_playerName.empty()) {
-        SDL_Point cornerUpRigt{ m_game.renderTextCenterred(m_playerName, 0.8f, false) };
-        if (m_timer < 0.5f) {
-            m_game.renderTextPositioned("_", cornerUpRigt.x, cornerUpRigt.y);
-        }
+    if (m_isTyping == true) {
+        renderNameInputUi();
     } else {
-        if (m_timer < 0.5f) {
-            m_game.renderTextCenterred("_", 0.8f, false);
-        }
+        renderLeaderBoard();
     }
 }
 
@@ -94,4 +81,49 @@ void SceneEnd::removeLastUTF8Char(std::string& str)
     }
     // 弹出 ASCII 字符
     str.pop_back();
+}
+
+void SceneEnd::renderNameInputUi()
+{
+    std::string scoreText{ "你的最终得分：" + std::to_string(m_game.finalScore()) };
+    // 渲染最终得分
+    m_game.renderTextCenterred(scoreText, 0.1f, false);
+    // 渲染游戏结束文本
+    m_game.renderTextCenterred("Game Over", 0.4f, true);
+    // 渲染输入提示文本
+    m_game.renderTextCenterred("请输入你的名字，按回车键确认：", 0.6f, false);
+    // 渲染玩家输入的名字
+    if (!m_playerName.empty()) {
+        SDL_Point cornerUpRigt{ m_game.renderTextCenterred(m_playerName, 0.8f, false) };
+        if (m_timer < 0.5f) {
+            m_game.renderTextPositioned("_", cornerUpRigt.x, cornerUpRigt.y);
+        }
+    } else {
+        if (m_timer < 0.5f) {
+            m_game.renderTextCenterred("_", 0.8f, false);
+        }
+    }
+}
+
+void SceneEnd::renderLeaderBoard()
+{
+    // 渲染排行榜标题
+    m_game.renderTextCenterred("排行榜", 0.05f, true);
+
+    // 渲染排行榜
+    auto posY{ 0.2 * m_game.windowHeight() };
+    auto i{ 1 };
+    for (const auto& item : m_game.leaderBoard()) {
+        std::string name{ std::to_string(i) + ". " + item.second };
+        std::string score{ std::to_string(item.first) };
+        m_game.renderTextPositioned(name, 100, posY);
+        m_game.renderTextPositioned(score, 100, posY, false);
+        posY += 45;
+        ++i;
+    }
+
+    // 渲染重新开始游戏提示
+    if (m_timer < 0.5f) {
+        m_game.renderTextCenterred("按 J 键重新开始游戏", 0.85f, false);
+    }
 }
