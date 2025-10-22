@@ -7,6 +7,7 @@
 #include <SDL2/SDL_ttf.h>
 
 #include <fstream>
+#include <sstream>
 
 void Game::init()
 {
@@ -296,8 +297,16 @@ void Game::loadData()
     }
 
     m_leaderBoard.clear();
-    int score;
-    std::string name;
-    while (file >> score >> name)
-        m_leaderBoard.insert({ score, name });
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss{ line };
+        int score;
+        if (iss >> score) {
+            iss >> std::ws; // 跳过分数和名字之间的空格
+            std::string name;
+            std::getline(iss, name);
+            m_leaderBoard.insert({ score, name });
+        }
+    }
 }
