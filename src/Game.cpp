@@ -240,3 +240,10 @@ void Game::renderBackground()
         }
     }
 }
+
+void Game::addToLeaderBoard(int score, std::string_view name)
+{
+    m_leaderBoard.insert({ score, std::string{ name } });
+    if (m_leaderBoard.size() > 8)
+        m_leaderBoard.erase(--m_leaderBoard.end());
+}

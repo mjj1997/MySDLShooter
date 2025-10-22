@@ -6,6 +6,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <map>
+#include <string>
 #include <string_view>
 
 class Game
@@ -42,6 +44,9 @@ public:
     int finalScore() const { return m_finalScore; }
     void setFinalScore(int score) { m_finalScore = score; }
 
+    std::multimap<int, std::string, std::greater<int>>& leaderBoard() { return m_leaderBoard; }
+    void addToLeaderBoard(int score, std::string_view name);
+
 private:
     Game() = default;
     Game(const Game&) = delete;
@@ -60,6 +65,7 @@ private:
     Uint32 m_frameTime{ static_cast<Uint32>(1000) / m_FPS };
     float m_deltaTime{ 0.0f };
     int m_finalScore{ 0 };
+    std::multimap<int, std::string, std::greater<int>> m_leaderBoard;
 
     Background m_nearStars;
     Background m_farStars;
