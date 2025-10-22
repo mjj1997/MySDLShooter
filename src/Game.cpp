@@ -167,6 +167,18 @@ void Game::handleEvent(SDL_Event* event)
         if (event->type == SDL_QUIT) {
             m_isRunning = false;
         }
+
+        if (event->type == SDL_KEYDOWN) {
+            if (event->key.keysym.scancode == SDL_SCANCODE_F4) {
+                m_isFullscreen = !m_isFullscreen;
+                if (m_isFullscreen) {
+                    SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
+                } else {
+                    SDL_SetWindowFullscreen(m_window, 0);
+                }
+            }
+        }
+
         m_currentScene->handleEvent(event);
     }
 }
