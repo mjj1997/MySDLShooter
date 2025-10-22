@@ -31,7 +31,7 @@ public:
 
     // 渲染居中文本帮助函数
     SDL_Point renderTextCenterred(std::string_view text, float ratioY, bool isTitle);
-    void renderTextPositioned(std::string_view text, int x, int y);
+    void renderTextPositioned(std::string_view text, int x, int y, bool isLeftAligned = true);
 
     void updateBackground(float deltaTime);
     void renderBackground();

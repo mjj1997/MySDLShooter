@@ -196,12 +196,15 @@ SDL_Point Game::renderTextCenterred(std::string_view text, float ratioY, bool is
     return { destRect.x + destRect.w, destRect.y };
 }
 
-void Game::renderTextPositioned(std::string_view text, int x, int y)
+void Game::renderTextPositioned(std::string_view text, int x, int y, bool isLeftAligned)
 {
     SDL_Color color{ 255, 255, 255, 255 };
     SDL_Surface* surface{ TTF_RenderUTF8_Solid(m_textFont, text.data(), color) };
     SDL_Texture* texture{ SDL_CreateTextureFromSurface(m_renderer, surface) };
     SDL_Rect destRect{ x, y, surface->w, surface->h };
+    if (isLeftAligned == false) {
+        destRect.x = m_windowWidth - x - surface->w;
+    }
     SDL_RenderCopy(m_renderer, texture, nullptr, &destRect);
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
