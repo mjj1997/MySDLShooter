@@ -1,5 +1,6 @@
 #include "SceneEnd.h"
 #include "Game.h"
+#include "SceneMain.h"
 
 #include <string>
 
@@ -26,11 +27,20 @@ void SceneEnd::handleEvent(SDL_Event* event)
             if (event->key.keysym.scancode == SDL_SCANCODE_RETURN) {
                 m_isTyping = false;
                 SDL_StopTextInput();
+                if (m_playerName.empty())
+                    m_playerName = "Jane Doe";
+                m_game.addToLeaderBoard(m_game.finalScore(), m_playerName);
             }
             if (event->key.keysym.scancode == SDL_SCANCODE_BACKSPACE) {
                 if (!m_playerName.empty()) {
                     removeLastUTF8Char(m_playerName);
                 }
+            }
+        }
+    } else {
+        if (event->type == SDL_KEYDOWN) {
+            if (event->key.keysym.scancode == SDL_SCANCODE_J) {
+                m_game.changeScene(new SceneMain);
             }
         }
     }
