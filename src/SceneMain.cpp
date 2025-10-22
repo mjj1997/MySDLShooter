@@ -638,8 +638,8 @@ void SceneMain::renderExplosions()
         const SDL_Rect srcRect{
             explosion->currentFrame * explosion->width,
             0,
-            explosion->width,
-            explosion->height,
+            explosion->width / 2,
+            explosion->height / 2,
         };
         const SDL_Rect dstRect{
             static_cast<int>(explosion->position.x),
