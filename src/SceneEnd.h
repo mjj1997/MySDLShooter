@@ -2,6 +2,8 @@
 
 #include "Scene.h"
 
+#include <SDL2/SDL_mixer.h>
+
 #include <string>
 
 class SceneEnd : public Scene
@@ -24,4 +26,5 @@ private:
     bool m_isTyping{ true };
     std::string m_playerName;
     float m_timer{ 0.0f };
+    Mix_Music* m_bgm;
 };
