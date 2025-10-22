@@ -6,7 +6,8 @@ target_sources(
           Game.cpp
           Scene.cpp
           SceneMain.cpp
-          SceneTitle.cpp)
+          SceneTitle.cpp
+          SceneEnd.cpp)
 
 target_link_libraries(
   SDLShooter

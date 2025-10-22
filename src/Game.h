@@ -6,6 +6,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <map>
+#include <string>
 #include <string_view>
 
 class Game
@@ -28,7 +30,8 @@ public:
     void render();
 
     // 渲染居中文本帮助函数
-    void renderTextCenterred(std::string_view text, float ratioY, bool isTitle);
+    SDL_Point renderTextCenterred(std::string_view text, float ratioY, bool isTitle);
+    void renderTextPositioned(std::string_view text, int x, int y, bool isLeftAligned = true);
 
     void updateBackground(float deltaTime);
     void renderBackground();
@@ -38,10 +41,19 @@ public:
     int windowWidth() const { return m_windowWidth; }
     int windowHeight() const { return m_windowHeight; }
 
+    int finalScore() const { return m_finalScore; }
+    void setFinalScore(int score) { m_finalScore = score; }
+
+    std::multimap<int, std::string, std::greater<int>>& leaderBoard() { return m_leaderBoard; }
+    void addToLeaderBoard(int score, std::string_view name);
+
 private:
     Game() = default;
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
+
+    void saveData();
+    void loadData();
 
     TTF_Font* m_titleFont;
     TTF_Font* m_textFont;
@@ -55,6 +67,8 @@ private:
     int m_FPS{ 60 };
     Uint32 m_frameTime{ static_cast<Uint32>(1000) / m_FPS };
     float m_deltaTime{ 0.0f };
+    int m_finalScore{ 0 };
+    std::multimap<int, std::string, std::greater<int>> m_leaderBoard;
 
     Background m_nearStars;
     Background m_farStars;

@@ -32,6 +32,7 @@ private:
     void updatePlayer(float deltaTime);
     void updateExplosions(float deltaTime);
     void updateItems(float deltaTime);
+    void delayChangingScene(float deltaTime, float delay);
     // 渲染相关
     void renderPlayerBullets();
     void renderEnemyBullets();
@@ -56,6 +57,7 @@ private:
 
     bool m_isPlayerAlive{ true };
     int m_score{ 0 };
+    float m_timer{ 0.0f };
 
     std::mt19937 m_randomEngine;
     std::uniform_real_distribution<float> m_randomDistribution;
