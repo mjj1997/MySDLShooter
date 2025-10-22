@@ -6,6 +6,8 @@
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <fstream>
+
 void Game::init()
 {
     // SDL初始化
@@ -89,6 +91,9 @@ void Game::init()
         m_isRunning = false;
     }
 
+    // 加载排行榜数据
+    loadData();
+
     m_currentScene = new SceneTitle;
     m_currentScene->init();
 }
@@ -125,6 +130,9 @@ void Game::changeScene(Scene* scene)
 
 void Game::clean()
 {
+    // 保存排行榜数据
+    saveData();
+
     if (m_currentScene != nullptr) {
         m_currentScene->clean();
         delete m_currentScene;
@@ -249,4 +257,32 @@ void Game::addToLeaderBoard(int score, std::string_view name)
     m_leaderBoard.insert({ score, std::string{ name } });
     if (m_leaderBoard.size() > 8)
         m_leaderBoard.erase(--m_leaderBoard.end());
+}
+
+void Game::saveData()
+{
+    std::ofstream file{ "assets/save.dat" };
+    if (!file.is_open()) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to open save file");
+        return;
+    }
+
+    for (const auto& item : m_leaderBoard) {
+        file << item.first << " " << item.second << std::endl;
+    }
+}
+
+void Game::loadData()
+{
+    std::ifstream file{ "assets/save.dat" };
+    if (!file.is_open()) {
+        SDL_Log("Failed to open save file");
+        return;
+    }
+
+    m_leaderBoard.clear();
+    int score;
+    std::string name;
+    while (file >> score >> name)
+        m_leaderBoard.insert({ score, name });
 }

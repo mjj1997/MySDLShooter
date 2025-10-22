@@ -52,6 +52,9 @@ private:
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
 
+    void saveData();
+    void loadData();
+
     TTF_Font* m_titleFont;
     TTF_Font* m_textFont;
 
