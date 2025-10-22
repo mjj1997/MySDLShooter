@@ -52,8 +52,8 @@ void SceneMain::init()
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load player texture: %s", SDL_GetError());
     }
     SDL_QueryTexture(m_player.texture, nullptr, nullptr, &m_player.width, &m_player.height);
-    m_player.width /= 4;
-    m_player.height /= 4;
+    m_player.width /= 5;
+    m_player.height /= 5;
     m_player.position.x = m_game.windowWidth() / 2 - m_player.width / 2;
     m_player.position.y = m_game.windowHeight() - m_player.height;
 
@@ -97,8 +97,8 @@ void SceneMain::init()
                      nullptr,
                      &m_enemyBulletTemplate.width,
                      &m_enemyBulletTemplate.height);
-    m_enemyBulletTemplate.width /= 4;
-    m_enemyBulletTemplate.height /= 4;
+    m_enemyBulletTemplate.width /= 2;
+    m_enemyBulletTemplate.height /= 2;
 
     // 初始化爆炸模板
     m_explosionTemplate.texture = IMG_LoadTexture(m_game.renderer(), "assets/effect/explosion.png");
@@ -111,6 +111,7 @@ void SceneMain::init()
                      &m_explosionTemplate.width,
                      &m_explosionTemplate.height);
     m_explosionTemplate.totalFrames = m_explosionTemplate.width / m_explosionTemplate.height;
+    m_explosionTemplate.height *= 2;
     m_explosionTemplate.width = m_explosionTemplate.height;
 
     // 初始化物品模板
@@ -637,8 +638,8 @@ void SceneMain::renderExplosions()
         const SDL_Rect srcRect{
             explosion->currentFrame * explosion->width,
             0,
-            explosion->width,
-            explosion->height,
+            explosion->width / 2,
+            explosion->height / 2,
         };
         const SDL_Rect dstRect{
             static_cast<int>(explosion->position.x),

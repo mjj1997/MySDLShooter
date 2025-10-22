@@ -7,6 +7,7 @@
 #include <SDL2/SDL_ttf.h>
 
 #include <fstream>
+#include <sstream>
 
 void Game::init()
 {
@@ -38,6 +39,9 @@ void Game::init()
                      SDL_GetError());
         m_isRunning = false;
     }
+    // 设置逻辑分辨率
+    SDL_RenderSetLogicalSize(m_renderer, m_windowWidth, m_windowHeight);
+
     // 初始化SDL_image
     if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
@@ -167,6 +171,18 @@ void Game::handleEvent(SDL_Event* event)
         if (event->type == SDL_QUIT) {
             m_isRunning = false;
         }
+
+        if (event->type == SDL_KEYDOWN) {
+            if (event->key.keysym.scancode == SDL_SCANCODE_F4) {
+                m_isFullscreen = !m_isFullscreen;
+                if (m_isFullscreen) {
+                    SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
+                } else {
+                    SDL_SetWindowFullscreen(m_window, 0);
+                }
+            }
+        }
+
         m_currentScene->handleEvent(event);
     }
 }
@@ -281,8 +297,16 @@ void Game::loadData()
     }
 
     m_leaderBoard.clear();
-    int score;
-    std::string name;
-    while (file >> score >> name)
-        m_leaderBoard.insert({ score, name });
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream iss{ line };
+        int score;
+        if (iss >> score) {
+            iss >> std::ws; // 跳过分数和名字之间的空格
+            std::string name;
+            std::getline(iss, name);
+            m_leaderBoard.insert({ score, name });
+        }
+    }
 }

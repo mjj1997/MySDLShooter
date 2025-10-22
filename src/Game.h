@@ -59,6 +59,7 @@ private:
     TTF_Font* m_textFont;
 
     bool m_isRunning{ true };
+    bool m_isFullscreen{ false };
     Scene* m_currentScene{ nullptr };
     SDL_Window* m_window{ nullptr };
     SDL_Renderer* m_renderer{ nullptr };
