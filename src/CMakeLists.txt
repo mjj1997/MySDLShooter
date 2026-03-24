@@ -11,11 +11,10 @@ target_sources(
 
 target_link_libraries(
   SDLShooter
-  PRIVATE $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
-          $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-          $<IF:$<TARGET_EXISTS:SDL2_image::SDL2_image>,SDL2_image::SDL2_image,SDL2_image::SDL2_image-static>
-          $<IF:$<TARGET_EXISTS:SDL2_mixer::SDL2_mixer>,SDL2_mixer::SDL2_mixer,SDL2_mixer::SDL2_mixer-static>
-          $<IF:$<TARGET_EXISTS:SDL2_ttf::SDL2_ttf>,SDL2_ttf::SDL2_ttf,SDL2_ttf::SDL2_ttf-static>)
+  PRIVATE SDL3::SDL3
+          SDL3_image::SDL3_image
+          SDL3_mixer::SDL3_mixer
+          SDL3_ttf::SDL3_ttf)
 
 # 1. 定义资源目录
 set(RESOURCE_SRC_DIR "${PROJECT_SOURCE_DIR}/assets")
