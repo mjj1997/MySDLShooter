@@ -54,7 +54,7 @@ add_library(MySDLShooter::MySDLShooter_warnings ALIAS MySDLShooter_warnings)
 #add_library(MySDLShooter::MySDLShooter_warnings INTERFACE IMPORTED)
 
 # configure files based on CMake configuration options
-add_subdirectory(configured_files)
+# add_subdirectory(configured_files)
 
 # Adding the src:
 add_subdirectory(src)
