@@ -2,7 +2,7 @@
 
 #include "Scene.h"
 
-#include <SDL2/SDL_mixer.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 class SceneTitle : public Scene
 {

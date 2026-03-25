@@ -3,8 +3,8 @@
 #include "Object.h"
 #include "Scene.h"
 
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include <list>
 #include <random>
