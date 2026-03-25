@@ -17,7 +17,7 @@ void SceneMain::init()
     // 加载并播放背景音乐
     m_bgm = Mix_LoadMUS("assets/music/03_Racing_Through_Asteroids_Loop.ogg");
     if (m_bgm == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load background music: %s", Mix_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load background music: %s", SDL_GetError());
     }
     Mix_PlayMusic(m_bgm, -1);
 
@@ -43,7 +43,7 @@ void SceneMain::init()
     // 打开字体
     m_scoreFont = TTF_OpenFont("assets/font/VonwaonBitmap-12px.ttf", 24);
     if (m_scoreFont == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", TTF_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", SDL_GetError());
     }
 
     // 初始化玩家飞机
@@ -51,7 +51,7 @@ void SceneMain::init()
     if (m_player.texture == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load player texture: %s", SDL_GetError());
     }
-    SDL_QueryTexture(m_player.texture, nullptr, nullptr, &m_player.width, &m_player.height);
+    SDL_GetTextureSize(m_player.texture, &m_player.width, &m_player.height);
     m_player.width /= 5;
     m_player.height /= 5;
     m_player.position.x = m_game.windowWidth() / 2 - m_player.width / 2;
@@ -64,11 +64,9 @@ void SceneMain::init()
                      "Failed to load player bullet texture: %s",
                      SDL_GetError());
     }
-    SDL_QueryTexture(m_playerBulletTemplate.texture,
-                     nullptr,
-                     nullptr,
-                     &m_playerBulletTemplate.width,
-                     &m_playerBulletTemplate.height);
+    SDL_GetTextureSize(m_playerBulletTemplate.texture,
+                       &m_playerBulletTemplate.width,
+                       &m_playerBulletTemplate.height);
     m_playerBulletTemplate.width /= 4;
     m_playerBulletTemplate.height /= 4;
 
@@ -77,11 +75,7 @@ void SceneMain::init()
     if (m_enemyTemplate.texture == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load enemy texture: %s", SDL_GetError());
     }
-    SDL_QueryTexture(m_enemyTemplate.texture,
-                     nullptr,
-                     nullptr,
-                     &m_enemyTemplate.width,
-                     &m_enemyTemplate.height);
+    SDL_GetTextureSize(m_enemyTemplate.texture, &m_enemyTemplate.width, &m_enemyTemplate.height);
     m_enemyTemplate.width /= 4;
     m_enemyTemplate.height /= 4;
 
@@ -92,11 +86,9 @@ void SceneMain::init()
                      "Failed to load enemy bullet texture: %s",
                      SDL_GetError());
     }
-    SDL_QueryTexture(m_enemyBulletTemplate.texture,
-                     nullptr,
-                     nullptr,
-                     &m_enemyBulletTemplate.width,
-                     &m_enemyBulletTemplate.height);
+    SDL_GetTextureSize(m_enemyBulletTemplate.texture,
+                       &m_enemyBulletTemplate.width,
+                       &m_enemyBulletTemplate.height);
     m_enemyBulletTemplate.width /= 2;
     m_enemyBulletTemplate.height /= 2;
 
@@ -105,11 +97,9 @@ void SceneMain::init()
     if (m_explosionTemplate.texture == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load explosion texture: %s", SDL_GetError());
     }
-    SDL_QueryTexture(m_explosionTemplate.texture,
-                     nullptr,
-                     nullptr,
-                     &m_explosionTemplate.width,
-                     &m_explosionTemplate.height);
+    SDL_GetTextureSize(m_explosionTemplate.texture,
+                       &m_explosionTemplate.width,
+                       &m_explosionTemplate.height);
     m_explosionTemplate.totalFrames = m_explosionTemplate.width / m_explosionTemplate.height;
     m_explosionTemplate.height *= 2;
     m_explosionTemplate.width = m_explosionTemplate.height;
@@ -119,19 +109,17 @@ void SceneMain::init()
     if (m_itemLifeTemplate.texture == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load item life texture: %s", SDL_GetError());
     }
-    SDL_QueryTexture(m_itemLifeTemplate.texture,
-                     nullptr,
-                     nullptr,
-                     &m_itemLifeTemplate.width,
-                     &m_itemLifeTemplate.height);
+    SDL_GetTextureSize(m_itemLifeTemplate.texture,
+                       &m_itemLifeTemplate.width,
+                       &m_itemLifeTemplate.height);
     m_itemLifeTemplate.width /= 4;
     m_itemLifeTemplate.height /= 4;
 }
 
 void SceneMain::handleEvent(SDL_Event* event)
 {
-    if (event->type == SDL_KEYDOWN) {
-        if (event->key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+    if (event->type == SDL_EVENT_KEY_DOWN) {
+        if (event->key.scancode == SDL_SCANCODE_ESCAPE) {
             m_game.changeScene(new SceneTitle);
         }
     }
@@ -160,13 +148,13 @@ void SceneMain::render()
 
     // 渲染玩家飞机
     if (m_isPlayerAlive) {
-        const SDL_Rect playerRect{
-            static_cast<int>(m_player.position.x),
-            static_cast<int>(m_player.position.y),
+        const SDL_FRect playerRect{
+            m_player.position.x,
+            m_player.position.y,
             m_player.width,
             m_player.height,
         };
-        SDL_RenderCopy(m_game.renderer(), m_player.texture, nullptr, &playerRect);
+        SDL_RenderTexture(m_game.renderer(), m_player.texture, nullptr, &playerRect);
     }
 
     // 渲染敌人
@@ -322,19 +310,19 @@ void SceneMain::updatePlayerBullets(float deltaTime)
             // 检查玩家子弹是否击中敌人
             bool hit{ false };
             for (auto* enemy : m_enemies) {
-                const SDL_Rect enemyRect{
-                    static_cast<int>(enemy->position.x),
-                    static_cast<int>(enemy->position.y),
+                const SDL_FRect enemyRect{
+                    enemy->position.x,
+                    enemy->position.y,
                     enemy->width,
                     enemy->height,
                 };
-                const SDL_Rect playerBulletRect{
-                    static_cast<int>(playerBullet->position.x),
-                    static_cast<int>(playerBullet->position.y),
+                const SDL_FRect playerBulletRect{
+                    playerBullet->position.x,
+                    playerBullet->position.y,
                     playerBullet->width,
                     playerBullet->height,
                 };
-                if (SDL_HasIntersection(&enemyRect, &playerBulletRect)) {
+                if (SDL_HasRectIntersectionFloat(&enemyRect, &playerBulletRect)) {
                     enemy->currentHealth -= playerBullet->damage;
                     delete playerBullet;
                     it = m_playerBullets.erase(it);
@@ -368,19 +356,20 @@ void SceneMain::updateEnemyBullets(float deltaTime)
             it = m_enemyBullets.erase(it);
         } else {
             // 检查敌人子弹是否击中玩家
-            const SDL_Rect playerRect{
-                static_cast<int>(m_player.position.x),
-                static_cast<int>(m_player.position.y),
+            const SDL_FRect playerRect{
+                m_player.position.x,
+                m_player.position.y,
                 m_player.width,
                 m_player.height,
             };
-            const SDL_Rect enemyBulletRect{
-                static_cast<int>(enemyBullet->position.x),
-                static_cast<int>(enemyBullet->position.y),
+            const SDL_FRect enemyBulletRect{
+                enemyBullet->position.x,
+                enemyBullet->position.y,
                 enemyBullet->width,
                 enemyBullet->height,
             };
-            if (SDL_HasIntersection(&playerRect, &enemyBulletRect) && m_isPlayerAlive != false) {
+            if (SDL_HasRectIntersectionFloat(&playerRect, &enemyBulletRect)
+                && m_isPlayerAlive != false) {
                 m_player.currentHealth -= enemyBullet->damage;
                 delete enemyBullet;
                 it = m_enemyBullets.erase(it);
@@ -463,19 +452,19 @@ void SceneMain::updatePlayer(float deltaTime)
         return;
     }
     for (auto* enemy : m_enemies) {
-        const SDL_Rect enemyRect{
-            static_cast<int>(enemy->position.x),
-            static_cast<int>(enemy->position.y),
+        const SDL_FRect enemyRect{
+            enemy->position.x,
+            enemy->position.y,
             enemy->width,
             enemy->height,
         };
-        const SDL_Rect playerRect{
-            static_cast<int>(m_player.position.x),
-            static_cast<int>(m_player.position.y),
+        const SDL_FRect playerRect{
+            m_player.position.x,
+            m_player.position.y,
             m_player.width,
             m_player.height,
         };
-        if (SDL_HasIntersection(&enemyRect, &playerRect)) {
+        if (SDL_HasRectIntersectionFloat(&enemyRect, &playerRect)) {
             m_player.currentHealth -= 1;
             enemy->currentHealth = 0;
         }
@@ -539,19 +528,19 @@ void SceneMain::updateItems(float deltaTime)
             delete item;
             it = m_items.erase(it);
         } else {
-            const SDL_Rect itemRect{
-                static_cast<int>(item->position.x),
-                static_cast<int>(item->position.y),
+            const SDL_FRect itemRect{
+                item->position.x,
+                item->position.y,
                 item->width,
                 item->height,
             };
-            const SDL_Rect playerRect{
-                static_cast<int>(m_player.position.x),
-                static_cast<int>(m_player.position.y),
+            const SDL_FRect playerRect{
+                m_player.position.x,
+                m_player.position.y,
                 m_player.width,
                 m_player.height,
             };
-            if (SDL_HasIntersection(&itemRect, &playerRect) && m_isPlayerAlive == true) {
+            if (SDL_HasRectIntersectionFloat(&itemRect, &playerRect) && m_isPlayerAlive == true) {
                 processItemPickup(item);
                 delete item;
                 it = m_items.erase(it);
@@ -574,110 +563,113 @@ void SceneMain::delayChangingScene(float deltaTime, float delay)
 void SceneMain::renderPlayerBullets()
 {
     for (auto* playerBullet : m_playerBullets) {
-        const SDL_Rect playerBulletRect{
-            static_cast<int>(playerBullet->position.x),
-            static_cast<int>(playerBullet->position.y),
+        const SDL_FRect playerBulletRect{
+            playerBullet->position.x,
+            playerBullet->position.y,
             playerBullet->width,
             playerBullet->height,
         };
-        SDL_RenderCopy(m_game.renderer(), playerBullet->texture, nullptr, &playerBulletRect);
+        SDL_RenderTexture(m_game.renderer(), playerBullet->texture, nullptr, &playerBulletRect);
     }
 }
 
 void SceneMain::renderEnemyBullets()
 {
     for (auto* enemyBullet : m_enemyBullets) {
-        const SDL_Rect enemyBulletRect{
-            static_cast<int>(enemyBullet->position.x),
-            static_cast<int>(enemyBullet->position.y),
+        const SDL_FRect enemyBulletRect{
+            enemyBullet->position.x,
+            enemyBullet->position.y,
             enemyBullet->width,
             enemyBullet->height,
         };
         auto angle{ SDL_atan2(enemyBullet->direction.y, enemyBullet->direction.x)
                         * (180 / std::numbers::pi)
                     - 90 };
-        SDL_RenderCopyEx(m_game.renderer(),
-                         enemyBullet->texture,
-                         nullptr,
-                         &enemyBulletRect,
-                         angle,
-                         nullptr,
-                         SDL_FLIP_NONE);
+        SDL_RenderTextureRotated(m_game.renderer(),
+                                 enemyBullet->texture,
+                                 nullptr,
+                                 &enemyBulletRect,
+                                 angle,
+                                 nullptr,
+                                 SDL_FLIP_NONE);
     }
 }
 
 void SceneMain::renderEnemies()
 {
     for (auto* enemy : m_enemies) {
-        const SDL_Rect enemyRect{
-            static_cast<int>(enemy->position.x),
-            static_cast<int>(enemy->position.y),
+        const SDL_FRect enemyRect{
+            enemy->position.x,
+            enemy->position.y,
             enemy->width,
             enemy->height,
         };
-        SDL_RenderCopy(m_game.renderer(), enemy->texture, nullptr, &enemyRect);
+        SDL_RenderTexture(m_game.renderer(), enemy->texture, nullptr, &enemyRect);
     }
 }
 
 void SceneMain::renderItems()
 {
     for (auto* item : m_items) {
-        const SDL_Rect itemRect{
-            static_cast<int>(item->position.x),
-            static_cast<int>(item->position.y),
+        const SDL_FRect itemRect{
+            item->position.x,
+            item->position.y,
             item->width,
             item->height,
         };
-        SDL_RenderCopy(m_game.renderer(), item->texture, nullptr, &itemRect);
+        SDL_RenderTexture(m_game.renderer(), item->texture, nullptr, &itemRect);
     }
 }
 
 void SceneMain::renderExplosions()
 {
     for (auto* explosion : m_explosions) {
-        const SDL_Rect srcRect{
+        const SDL_FRect srcRect{
             explosion->currentFrame * explosion->width,
             0,
             explosion->width / 2,
             explosion->height / 2,
         };
-        const SDL_Rect dstRect{
-            static_cast<int>(explosion->position.x),
-            static_cast<int>(explosion->position.y),
+        const SDL_FRect dstRect{
+            explosion->position.x,
+            explosion->position.y,
             explosion->width,
             explosion->height,
         };
-        SDL_RenderCopy(m_game.renderer(), explosion->texture, &srcRect, &dstRect);
+        SDL_RenderTexture(m_game.renderer(), explosion->texture, &srcRect, &dstRect);
     }
 }
 
 void SceneMain::renderUI()
 {
-    int x{ 10 };
-    int y{ 10 };
-    int size{ 32 };
-    int offset{ 40 };
+    float x{ 10.0f };
+    float y{ 10.0f };
+    float size{ 32.0f };
+    float offset{ 40.0f };
 
     SDL_SetTextureColorMod(m_healthUI, 128, 128, 128); // 使颜色变淡
-    for (int i{ 0 }; i < m_player.maxHealth; ++i) {
-        SDL_Rect rect{ x + i * offset, y, size, size };
-        SDL_RenderCopy(m_game.renderer(), m_healthUI, nullptr, &rect);
+    for (float i{ 0 }; i < m_player.maxHealth; ++i) {
+        SDL_FRect rect{ x + i * offset, y, size, size };
+        SDL_RenderTexture(m_game.renderer(), m_healthUI, nullptr, &rect);
     }
 
     SDL_SetTextureColorMod(m_healthUI, 255, 255, 255); // 恢复颜色
-    for (int i{ 0 }; i < m_player.currentHealth; ++i) {
-        SDL_Rect rect{ x + i * offset, y, size, size };
-        SDL_RenderCopy(m_game.renderer(), m_healthUI, nullptr, &rect);
+    for (float i{ 0 }; i < m_player.currentHealth; ++i) {
+        SDL_FRect rect{ x + i * offset, y, size, size };
+        SDL_RenderTexture(m_game.renderer(), m_healthUI, nullptr, &rect);
     }
 
     // 渲染得分
     auto scoreText{ "SCORE: " + std::to_string(m_score) };
     SDL_Color textColor{ 255, 255, 255, 255 };
-    SDL_Surface* textSurface{ TTF_RenderUTF8_Solid(m_scoreFont, scoreText.c_str(), textColor) };
+    SDL_Surface* textSurface{ TTF_RenderText_Solid(m_scoreFont, scoreText.c_str(), 0, textColor) };
     SDL_Texture* textTexture{ SDL_CreateTextureFromSurface(m_game.renderer(), textSurface) };
-    SDL_Rect rect{ m_game.windowWidth() - 10 - textSurface->w, 10, textSurface->w, textSurface->h };
-    SDL_RenderCopy(m_game.renderer(), textTexture, nullptr, &rect);
-    SDL_FreeSurface(textSurface);
+    SDL_FRect rect{ m_game.windowWidth() - 10.0f - static_cast<float>(textSurface->w),
+                    10.0f,
+                    static_cast<float>(textSurface->w),
+                    static_cast<float>(textSurface->h) };
+    SDL_RenderTexture(m_game.renderer(), textTexture, nullptr, &rect);
+    SDL_DestroySurface(textSurface);
     SDL_DestroyTexture(textTexture);
 }
 
