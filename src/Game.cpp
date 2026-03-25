@@ -1,30 +1,32 @@
 #include "Game.h"
 #include "SceneTitle.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
+#include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include <fstream>
 #include <sstream>
 
+Game::~Game()
+{
+    // 保存排行榜数据
+    saveData();
+    clean();
+}
+
 void Game::init()
 {
     // SDL初始化
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+    if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO)) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                      "SDL could not initialize! SDL_Error: %s\n",
                      SDL_GetError());
         m_isRunning = false;
     }
     // 创建窗口
-    m_window = SDL_CreateWindow("SDL 太空战机",
-                                SDL_WINDOWPOS_CENTERED,
-                                SDL_WINDOWPOS_CENTERED,
-                                m_windowWidth,
-                                m_windowHeight,
-                                SDL_WINDOW_SHOWN);
+    m_window = SDL_CreateWindow("SDL 太空战机", m_windowWidth, m_windowHeight, SDL_WINDOW_RESIZABLE);
     if (m_window == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                      "Window could not be created! SDL_Error: %s\n",
@@ -32,7 +34,7 @@ void Game::init()
         m_isRunning = false;
     }
     // 创建渲染器
-    m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
+    m_renderer = SDL_CreateRenderer(m_window, NULL);
     if (m_renderer == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                      "Renderer could not be created! SDL_Error: %s\n",
@@ -40,47 +42,47 @@ void Game::init()
         m_isRunning = false;
     }
     // 设置逻辑分辨率
-    SDL_RenderSetLogicalSize(m_renderer, m_windowWidth, m_windowHeight);
+    SDL_SetRenderLogicalPresentation(m_renderer,
+                                     m_windowWidth,
+                                     m_windowHeight,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-    // 初始化SDL_image
-    if (IMG_Init(IMG_INIT_PNG) != IMG_INIT_PNG) {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR,
-                     "SDL_image could not initialize! SDL_image Error: %s\n",
-                     IMG_GetError());
-        m_isRunning = false;
-    }
+    // 不再需要初始化SDL_image
+
     // 初始化SDL_mixer
-    if (Mix_Init(MIX_INIT_OGG) != MIX_INIT_OGG) {
+    if (!MIX_Init()) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                      "SDL_mixer could not initialize! SDL_mixer Error: %s\n",
-                     Mix_GetError());
+                     SDL_GetError());
         m_isRunning = false;
     }
-    // 打开音频设备
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+    // 创建混音器
+    m_mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+    if (!m_mixer) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                      "SDL_mixer could not initialize! SDL_mixer Error: %s\n",
-                     Mix_GetError());
+                     SDL_GetError());
         m_isRunning = false;
     }
-    // 设置音效channel数量
-    Mix_AllocateChannels(32);
+    // 设置混音器总音量
+    MIX_SetMixerGain(m_mixer, 0.125f);
+
     // 初始化字体
-    if (TTF_Init() != 0) {
+    if (!TTF_Init()) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                      "SDL_ttf could not initialize! SDL_ttf Error: %s\n",
-                     TTF_GetError());
+                     SDL_GetError());
         m_isRunning = false;
     }
 
     // 初始化背景
     m_nearStars.texture = IMG_LoadTexture(m_renderer, "assets/image/Stars-A.png");
-    SDL_QueryTexture(m_nearStars.texture, nullptr, nullptr, &m_nearStars.width, &m_nearStars.height);
+    SDL_GetTextureSize(m_nearStars.texture, &m_nearStars.width, &m_nearStars.height);
     m_nearStars.width /= 2;
     m_nearStars.height /= 2;
 
     m_farStars.texture = IMG_LoadTexture(m_renderer, "assets/image/Stars-B.png");
-    SDL_QueryTexture(m_farStars.texture, nullptr, nullptr, &m_farStars.width, &m_farStars.height);
+    SDL_GetTextureSize(m_farStars.texture, &m_farStars.width, &m_farStars.height);
     m_farStars.width /= 2;
     m_farStars.height /= 2;
     m_farStars.speed = 20;
@@ -91,7 +93,7 @@ void Game::init()
     if (m_titleFont == nullptr || m_textFont == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                      "SDL_ttf could not load font! SDL_ttf Error: %s\n",
-                     TTF_GetError());
+                     SDL_GetError());
         m_isRunning = false;
     }
 
@@ -134,9 +136,6 @@ void Game::changeScene(Scene* scene)
 
 void Game::clean()
 {
-    // 保存排行榜数据
-    saveData();
-
     if (m_currentScene != nullptr) {
         m_currentScene->clean();
         delete m_currentScene;
@@ -146,11 +145,10 @@ void Game::clean()
         SDL_DestroyTexture(m_nearStars.texture);
     if (m_farStars.texture != nullptr)
         SDL_DestroyTexture(m_farStars.texture);
-    // 清理SDL_image
-    IMG_Quit();
+    // 不再需要清理SDL_image
     // 清理SDL_mixer
-    Mix_CloseAudio();
-    Mix_Quit();
+    MIX_DestroyMixer(m_mixer);
+    MIX_Quit();
     // 清理字体
     if (m_titleFont != nullptr) {
         TTF_CloseFont(m_titleFont);
@@ -168,12 +166,12 @@ void Game::clean()
 void Game::handleEvent(SDL_Event* event)
 {
     while (SDL_PollEvent(event)) {
-        if (event->type == SDL_QUIT) {
+        if (event->type == SDL_EVENT_QUIT) {
             m_isRunning = false;
         }
 
-        if (event->type == SDL_KEYDOWN) {
-            if (event->key.keysym.scancode == SDL_SCANCODE_F4) {
+        if (event->type == SDL_EVENT_KEY_DOWN) {
+            if (event->key.scancode == SDL_SCANCODE_F4) {
                 m_isFullscreen = !m_isFullscreen;
                 if (m_isFullscreen) {
                     SDL_SetWindowFullscreen(m_window, SDL_WINDOW_FULLSCREEN);
@@ -204,33 +202,33 @@ void Game::render()
     SDL_RenderPresent(m_renderer);
 }
 
-SDL_Point Game::renderTextCenterred(std::string_view text, float ratioY, bool isTitle)
+SDL_FPoint Game::renderTextCenterred(std::string_view text, float ratioY, bool isTitle)
 {
     TTF_Font* font = isTitle ? m_titleFont : m_textFont;
     SDL_Color color{ 255, 255, 255, 255 };
-    SDL_Surface* surface{ TTF_RenderUTF8_Solid(font, text.data(), color) };
+    SDL_Surface* surface{ TTF_RenderText_Solid(font, text.data(), 0, color) };
     SDL_Texture* texture{ SDL_CreateTextureFromSurface(m_renderer, surface) };
-    int posX{ (m_windowWidth - surface->w) / 2 };
-    int posY{ static_cast<int>(ratioY * (m_windowHeight - surface->h)) };
-    SDL_Rect destRect{ posX, posY, surface->w, surface->h };
-    SDL_RenderCopy(m_renderer, texture, nullptr, &destRect);
-    SDL_FreeSurface(surface);
+    float posX{ (m_windowWidth - surface->w) / 2.0f };
+    float posY{ ratioY * (m_windowHeight - surface->h) };
+    SDL_FRect destRect{ posX, posY, static_cast<float>(surface->w), static_cast<float>(surface->h) };
+    SDL_RenderTexture(m_renderer, texture, nullptr, &destRect);
+    SDL_DestroySurface(surface);
     SDL_DestroyTexture(texture);
 
     return { destRect.x + destRect.w, destRect.y };
 }
 
-void Game::renderTextPositioned(std::string_view text, int x, int y, bool isLeftAligned)
+void Game::renderTextPositioned(std::string_view text, float x, float y, bool isLeftAligned)
 {
     SDL_Color color{ 255, 255, 255, 255 };
-    SDL_Surface* surface{ TTF_RenderUTF8_Solid(m_textFont, text.data(), color) };
+    SDL_Surface* surface{ TTF_RenderText_Solid(m_textFont, text.data(), 0, color) };
     SDL_Texture* texture{ SDL_CreateTextureFromSurface(m_renderer, surface) };
-    SDL_Rect destRect{ x, y, surface->w, surface->h };
+    SDL_FRect destRect{ x, y, static_cast<float>(surface->w), static_cast<float>(surface->h) };
     if (isLeftAligned == false) {
         destRect.x = m_windowWidth - x - surface->w;
     }
-    SDL_RenderCopy(m_renderer, texture, nullptr, &destRect);
-    SDL_FreeSurface(surface);
+    SDL_RenderTexture(m_renderer, texture, nullptr, &destRect);
+    SDL_DestroySurface(surface);
     SDL_DestroyTexture(texture);
 }
 
@@ -250,20 +248,18 @@ void Game::updateBackground(float deltaTime)
 void Game::renderBackground()
 {
     // 渲染远处星空
-    for (int posY{ static_cast<int>(m_farStars.offset) }; posY < m_windowHeight;
-         posY += m_farStars.height) {
-        for (int posX{ 0 }; posX < m_windowWidth; posX += m_farStars.width) {
-            SDL_Rect destRect{ posX, posY, m_farStars.width, m_farStars.height };
-            SDL_RenderCopy(m_renderer, m_farStars.texture, nullptr, &destRect);
+    for (float posY{ m_farStars.offset }; posY < m_windowHeight; posY += m_farStars.height) {
+        for (float posX{ 0 }; posX < m_windowWidth; posX += m_farStars.width) {
+            SDL_FRect destRect{ posX, posY, m_farStars.width, m_farStars.height };
+            SDL_RenderTexture(m_renderer, m_farStars.texture, nullptr, &destRect);
         }
     }
 
     // 渲染近处星空
-    for (int posY{ static_cast<int>(m_nearStars.offset) }; posY < m_windowHeight;
-         posY += m_nearStars.height) {
-        for (int posX{ 0 }; posX < m_windowWidth; posX += m_nearStars.width) {
-            SDL_Rect destRect{ posX, posY, m_nearStars.width, m_nearStars.height };
-            SDL_RenderCopy(m_renderer, m_nearStars.texture, nullptr, &destRect);
+    for (float posY{ m_nearStars.offset }; posY < m_windowHeight; posY += m_nearStars.height) {
+        for (float posX{ 0 }; posX < m_windowWidth; posX += m_nearStars.width) {
+            SDL_FRect destRect{ posX, posY, m_nearStars.width, m_nearStars.height };
+            SDL_RenderTexture(m_renderer, m_nearStars.texture, nullptr, &destRect);
         }
     }
 }

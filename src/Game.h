@@ -3,8 +3,9 @@
 #include "Object.h"
 #include "Scene.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include <map>
 #include <string>
@@ -18,7 +19,7 @@ public:
         static Game s_instance;
         return s_instance;
     }
-    ~Game() = default;
+    ~Game();
 
     void init();
     void run();
@@ -30,16 +31,17 @@ public:
     void render();
 
     // 渲染居中文本帮助函数
-    SDL_Point renderTextCenterred(std::string_view text, float ratioY, bool isTitle);
-    void renderTextPositioned(std::string_view text, int x, int y, bool isLeftAligned = true);
+    SDL_FPoint renderTextCenterred(std::string_view text, float ratioY, bool isTitle);
+    void renderTextPositioned(std::string_view text, float x, float y, bool isLeftAligned = true);
 
     void updateBackground(float deltaTime);
     void renderBackground();
 
     SDL_Window* window() { return m_window; }
     SDL_Renderer* renderer() { return m_renderer; }
-    int windowWidth() const { return m_windowWidth; }
-    int windowHeight() const { return m_windowHeight; }
+    MIX_Mixer* mixer() { return m_mixer; }
+    float windowWidth() const { return m_windowWidth; }
+    float windowHeight() const { return m_windowHeight; }
 
     int finalScore() const { return m_finalScore; }
     void setFinalScore(int score) { m_finalScore = score; }
@@ -63,8 +65,9 @@ private:
     Scene* m_currentScene{ nullptr };
     SDL_Window* m_window{ nullptr };
     SDL_Renderer* m_renderer{ nullptr };
-    int m_windowWidth{ 600 };
-    int m_windowHeight{ 800 };
+    MIX_Mixer* m_mixer{ nullptr };
+    float m_windowWidth{ 600.0f };
+    float m_windowHeight{ 800.0f };
     int m_FPS{ 60 };
     Uint32 m_frameTime{ static_cast<Uint32>(1000) / m_FPS };
     float m_deltaTime{ 0.0f };
