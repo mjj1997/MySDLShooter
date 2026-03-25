@@ -4,6 +4,7 @@
 #include "Scene.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
 #include <map>
@@ -38,6 +39,7 @@ public:
 
     SDL_Window* window() { return m_window; }
     SDL_Renderer* renderer() { return m_renderer; }
+    MIX_Mixer* mixer() { return m_mixer; }
     float windowWidth() const { return m_windowWidth; }
     float windowHeight() const { return m_windowHeight; }
 
@@ -63,6 +65,7 @@ private:
     Scene* m_currentScene{ nullptr };
     SDL_Window* m_window{ nullptr };
     SDL_Renderer* m_renderer{ nullptr };
+    MIX_Mixer* m_mixer{ nullptr };
     float m_windowWidth{ 600.0f };
     float m_windowHeight{ 800.0f };
     int m_FPS{ 60 };

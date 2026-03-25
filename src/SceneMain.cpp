@@ -15,19 +15,25 @@
 void SceneMain::init()
 {
     // 加载并播放背景音乐
-    m_bgm = Mix_LoadMUS("assets/music/03_Racing_Through_Asteroids_Loop.ogg");
-    if (m_bgm == nullptr) {
+    m_bgm = MIX_LoadAudio(m_game.mixer(),
+                          "assets/music/03_Racing_Through_Asteroids_Loop.ogg",
+                          false);
+    if (!m_bgm) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load background music: %s", SDL_GetError());
     }
-    Mix_PlayMusic(m_bgm, -1);
+    m_bgmTrack = MIX_CreateTrack(m_game.mixer());
+    MIX_SetTrackAudio(m_bgmTrack, m_bgm);
+    MIX_SetTrackGain(m_bgmTrack, 2.0f);
+    MIX_SetTrackLoops(m_bgmTrack, -1);
+    MIX_PlayTrack(m_bgmTrack, 0);
 
     // 加载音效
-    m_sounds["player_shoot"] = Mix_LoadWAV("assets/sound/laser_shoot4.wav");
-    m_sounds["enemy_shoot"] = Mix_LoadWAV("assets/sound/xs_laser.wav");
-    m_sounds["player_explode"] = Mix_LoadWAV("assets/sound/explosion1.wav");
-    m_sounds["enemy_explode"] = Mix_LoadWAV("assets/sound/explosion3.wav");
-    m_sounds["hit"] = Mix_LoadWAV("assets/sound/eff11.wav");
-    m_sounds["get_item"] = Mix_LoadWAV("assets/sound/eff5.wav");
+    m_sounds["player_shoot"] = MIX_LoadAudio(m_game.mixer(), "assets/sound/laser_shoot4.wav", true);
+    m_sounds["enemy_shoot"] = MIX_LoadAudio(m_game.mixer(), "assets/sound/xs_laser.wav", true);
+    m_sounds["player_explode"] = MIX_LoadAudio(m_game.mixer(), "assets/sound/explosion1.wav", true);
+    m_sounds["enemy_explode"] = MIX_LoadAudio(m_game.mixer(), "assets/sound/explosion33.wav", true);
+    m_sounds["hit"] = MIX_LoadAudio(m_game.mixer(), "assets/sound/eff11.wav", true);
+    m_sounds["get_item"] = MIX_LoadAudio(m_game.mixer(), "assets/sound/eff5.wav", true);
 
     // 初始化随机数生成器
     std::random_device randomDevice;
@@ -172,7 +178,7 @@ void SceneMain::clean()
     // 清理音效
     for (auto& sound : m_sounds) {
         if (sound.second != nullptr) {
-            Mix_FreeChunk(sound.second);
+            MIX_DestroyAudio(sound.second);
         }
     }
     m_sounds.clear();
@@ -246,9 +252,12 @@ void SceneMain::clean()
     }
 
     // 清理背景音乐
+    if (m_bgmTrack != nullptr) {
+        MIX_StopTrack(m_bgmTrack, 0);
+        MIX_DestroyTrack(m_bgmTrack);
+    }
     if (m_bgm != nullptr) {
-        Mix_HaltMusic();
-        Mix_FreeMusic(m_bgm);
+        MIX_DestroyAudio(m_bgm);
     }
 }
 
@@ -328,7 +337,7 @@ void SceneMain::updatePlayerBullets(float deltaTime)
                     it = m_playerBullets.erase(it);
                     hit = true;
                     // 播放击中音效
-                    Mix_PlayChannel(-1, m_sounds["hit"], 0);
+                    MIX_PlayAudio(m_game.mixer(), m_sounds["hit"]);
                     break;
                 }
             }
@@ -374,7 +383,7 @@ void SceneMain::updateEnemyBullets(float deltaTime)
                 delete enemyBullet;
                 it = m_enemyBullets.erase(it);
                 // 播放击中音效
-                Mix_PlayChannel(-1, m_sounds["hit"], 0);
+                MIX_PlayAudio(m_game.mixer(), m_sounds["hit"]);
             } else {
                 ++it;
             }
@@ -424,7 +433,7 @@ void SceneMain::updateEnemies(float deltaTime)
                 delete enemy;
                 it = m_enemies.erase(it);
                 // 播放敌人爆炸音效
-                Mix_PlayChannel(-1, m_sounds["enemy_explode"], 0);
+                MIX_PlayAudio(m_game.mixer(), m_sounds["enemy_explode"]);
             } else {
                 ++it;
             }
@@ -446,7 +455,7 @@ void SceneMain::updatePlayer(float deltaTime)
         explosion->startTime = currentTime;
         m_explosions.push_back(explosion);
         // 播放玩家爆炸音效
-        Mix_PlayChannel(-1, m_sounds["player_explode"], 0);
+        MIX_PlayAudio(m_game.mixer(), m_sounds["player_explode"]);
         // 设置游戏最终得分
         m_game.setFinalScore(m_score);
         return;
@@ -684,7 +693,7 @@ void SceneMain::shootPlayerBullet()
     // 添加玩家子弹到列表
     m_playerBullets.push_back(playerBullet);
     // 播放玩家射击音效
-    Mix_PlayChannel(0, m_sounds["player_shoot"], 0);
+    MIX_PlayAudio(m_game.mixer(), m_sounds["player_shoot"]);
 }
 
 void SceneMain::shootEnemyBullet(Enemy* enemy)
@@ -699,7 +708,7 @@ void SceneMain::shootEnemyBullet(Enemy* enemy)
     // 添加敌人子弹到列表
     m_enemyBullets.push_back(enemyBullet);
     // 播放敌人射击音效
-    Mix_PlayChannel(-1, m_sounds["enemy_shoot"], 0);
+    MIX_PlayAudio(m_game.mixer(), m_sounds["enemy_shoot"]);
 }
 
 SDL_FPoint SceneMain::getEnemyBulletDirection(Enemy* enemy) const
@@ -754,7 +763,7 @@ void SceneMain::processItemPickup(Item* item)
             m_player.currentHealth = m_player.maxHealth;
         }
         // 播放拾取物品音效
-        Mix_PlayChannel(-1, m_sounds["get_item"], 0);
+        MIX_PlayAudio(m_game.mixer(), m_sounds["get_item"]);
         break;
     default:
         break;

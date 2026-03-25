@@ -17,6 +17,7 @@ public:
     void clean() override;
 
 private:
-    Mix_Music* m_bgm;
+    MIX_Audio* m_bgm;
+    MIX_Track* m_bgmTrack;
     float m_timer{ 0.0f };
 };

@@ -7,11 +7,15 @@
 void SceneEnd::init()
 {
     // 加载并播放背景音乐
-    m_bgm = Mix_LoadMUS("assets/music/06_Battle_in_Space_Intro.ogg");
-    if (m_bgm == nullptr) {
+    m_bgm = MIX_LoadAudio(m_game.mixer(), "assets/music/06_Battle_in_Space_Intro.ogg", false);
+    if (!m_bgm) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load background music: %s", SDL_GetError());
     }
-    Mix_PlayMusic(m_bgm, -1);
+    m_bgmTrack = MIX_CreateTrack(m_game.mixer());
+    MIX_SetTrackAudio(m_bgmTrack, m_bgm);
+    MIX_SetTrackGain(m_bgmTrack, 2.0f);
+    MIX_SetTrackLoops(m_bgmTrack, -1);
+    MIX_PlayTrack(m_bgmTrack, 0);
 
     if (!SDL_TextInputActive(m_game.window())) {
         SDL_StartTextInput(m_game.window());
@@ -73,13 +77,16 @@ void SceneEnd::render()
 void SceneEnd::clean()
 {
     // 清理背景音乐
+    if (m_bgmTrack != nullptr) {
+        MIX_StopTrack(m_bgmTrack, 0);
+        MIX_DestroyTrack(m_bgmTrack);
+    }
     if (m_bgm != nullptr) {
-        Mix_HaltMusic();
-        Mix_FreeMusic(m_bgm);
+        MIX_DestroyAudio(m_bgm);
     }
 
-    if (SDL_IsTextInputActive()) {
-        SDL_StopTextInput();
+    if (SDL_TextInputActive(m_game.window())) {
+        SDL_StopTextInput(m_game.window());
     }
 }
 

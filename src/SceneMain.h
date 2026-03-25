@@ -50,8 +50,9 @@ private:
 
 private:
     Player m_player;
-    Mix_Music* m_bgm;
-    std::unordered_map<std::string, Mix_Chunk*> m_sounds;
+    MIX_Audio* m_bgm;
+    MIX_Track* m_bgmTrack;
+    std::unordered_map<std::string, MIX_Audio*> m_sounds;
     SDL_Texture* m_healthUI;
     TTF_Font* m_scoreFont;
 

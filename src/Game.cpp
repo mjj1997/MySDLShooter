@@ -43,21 +43,23 @@ void Game::init()
     // 不再需要初始化SDL_image
 
     // 初始化SDL_mixer
-    if (Mix_Init(MIX_INIT_OGG) != MIX_INIT_OGG) {
+    if (!MIX_Init()) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                      "SDL_mixer could not initialize! SDL_mixer Error: %s\n",
-                     Mix_GetError());
+                     SDL_GetError());
         m_isRunning = false;
     }
-    // 打开音频设备
-    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+    // 创建混音器
+    m_mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+    if (!m_mixer) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
                      "SDL_mixer could not initialize! SDL_mixer Error: %s\n",
-                     Mix_GetError());
+                     SDL_GetError());
         m_isRunning = false;
     }
-    // 设置音效channel数量
-    Mix_AllocateChannels(32);
+    // 设置混音器总音量
+    MIX_SetMixerGain(m_mixer, 0.125f);
+
     // 初始化字体
     if (!TTF_Init()) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR,
@@ -141,8 +143,8 @@ void Game::clean()
         SDL_DestroyTexture(m_farStars.texture);
     // 不再需要清理SDL_image
     // 清理SDL_mixer
-    Mix_CloseAudio();
-    Mix_Quit();
+    MIX_DestroyMixer(m_mixer);
+    MIX_Quit();
     // 清理字体
     if (m_titleFont != nullptr) {
         TTF_CloseFont(m_titleFont);
