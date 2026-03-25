@@ -19,7 +19,7 @@ public:
         static Game s_instance;
         return s_instance;
     }
-    ~Game() = default;
+    ~Game();
 
     void init();
     void run();

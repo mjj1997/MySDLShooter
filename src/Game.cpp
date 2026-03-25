@@ -9,6 +9,13 @@
 #include <fstream>
 #include <sstream>
 
+Game::~Game()
+{
+    // 保存排行榜数据
+    saveData();
+    clean();
+}
+
 void Game::init()
 {
     // SDL初始化
@@ -129,9 +136,6 @@ void Game::changeScene(Scene* scene)
 
 void Game::clean()
 {
-    // 保存排行榜数据
-    saveData();
-
     if (m_currentScene != nullptr) {
         m_currentScene->clean();
         delete m_currentScene;
